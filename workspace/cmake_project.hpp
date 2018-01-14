@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../settings/settings.hpp"
 #include "project.hpp"
 
 #include "../copyability.hpp"
@@ -12,8 +13,7 @@ namespace MinIDE
         NONCOPY(CMakeProject);
 
     public:
-        CMakeProject() = default;
-        CMakeProject(path const& rootDir);
+        CMakeProject(Settings* settings, path const& rootDir);
 
         void loadEnvironment(path const& rootDir) override;
 

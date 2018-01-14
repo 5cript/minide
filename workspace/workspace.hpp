@@ -16,10 +16,30 @@ namespace MinIDE
         Workspace(Settings* settings);
         ~Workspace() = default;
 
+        /**
+         *  Initialize a new virtual workspace.
+         */
         void loadWorkspace();
+
+        /**
+         *  Load a workspace.
+         */
         void loadWorkspace(path const& workspaceFile);
 
-        void addProject(path const& relativeProjectDir);
+        /**
+         *  Add a project to the workspace.
+         */
+        Project* addProject(path const& relativeProjectDir);
+
+        /**
+         *  Retrieve projects.
+         */
+        std::vector <std::unique_ptr <Project>>* projects();
+
+        /**
+         *  Retrieve a project by name or nullptr;
+         */
+        Project* projectByName(std::string const& name);
 
     private:
         Settings* settings_;

@@ -28,10 +28,12 @@ namespace MinIDE
     private:
         void setLayout();
         void setupMenu();
+        void reloadProjectTree();
+        void registerTreeEvents();
 
     private:
         std::unique_ptr <MainWindowImpl> elements_;
-        Workspace workspace_;
         Settings settings_;
+        Workspace workspace_;
     };
 }

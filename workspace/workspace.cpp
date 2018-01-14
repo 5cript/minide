@@ -25,13 +25,29 @@ namespace MinIDE
         workspaceFile_ = workspaceFile;
     }
 //---------------------------------------------------------------------------------------------------------------------
-    void Workspace::addProject(path const& relativeProjectDir)
+    std::vector <std::unique_ptr <Project>>* Workspace::projects()
+    {
+        return &projects_;
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    Project* Workspace::addProject(path const& relativeProjectDir)
     {
         auto projectDir = workspaceRoot_ / relativeProjectDir;
         if (filesystem::exists(projectDir / "CMakeLists.txt"))
         {
-            projects_.push_back(std::make_unique <CMakeProject> (projectDir));
+            projects_.push_back(std::make_unique <CMakeProject> (settings_, projectDir));
+            return projects_.back().get();
         }
+        return nullptr;
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    Project* Workspace::projectByName(std::string const& name)
+    {
+        for (auto const& project : projects_)
+            if (project && project->name() == name)
+                return project.get();
+
+        return nullptr;
     }
 //#####################################################################################################################
 }

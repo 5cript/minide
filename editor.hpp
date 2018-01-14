@@ -1,5 +1,6 @@
 #pragma once
 
+#include "filesystem.hpp"
 #include "copyability.hpp"
 #include "theme.hpp"
 
@@ -24,9 +25,14 @@ namespace MinIDE
         ~Editor();
 
         void loadTheme(Theme const& theme);
+        void loadFile(path const& projectRoot, path const& relativeToRootName);
 
     private:
         void setLayout();
+        void tabSynchronize();
+        void registerTabEvents();
+        void registerEditorEvents();
+        void setText(std::string const& text);
 
     private:
         std::unique_ptr <EditorImpl> elements_;

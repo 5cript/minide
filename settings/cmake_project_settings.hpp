@@ -1,9 +1,11 @@
 #pragma once
 
+#include "globSettings.hpp"
+
 namespace MinIDE
 {
     struct CMakeProjectSettings
     {
-        std::vector <std::string> projectGlobFilter = {"*.cpp", "*.hpp", "*.h", "*.c", "CMakeLists.txt"};
+        GlobSettings globbing;
     };
 }

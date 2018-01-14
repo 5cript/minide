@@ -4,7 +4,7 @@
 
 namespace MinIDE
 {
-    class Settings
+    struct Settings
     {
         CMakeProjectSettings cmakeProjectSettings;
     };

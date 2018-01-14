@@ -1,6 +1,7 @@
 #include "main_window.hpp"
 #include "editor.hpp"
 #include "log_tabs.hpp"
+#include "project_tree_renderer.hpp"
 
 #include <nana/gui/msgbox.hpp>
 #include <nana/gui/place.hpp>
@@ -10,6 +11,8 @@
 #include <nana/gui/filebox.hpp>
 
 #include <iostream>
+
+using namespace std::string_literals;
 
 namespace MinIDE
 {
@@ -32,6 +35,7 @@ namespace MinIDE
 
         // Other
         Theme theme;
+        ProjectTreeRenderer treeRenderer;
     };
 //---------------------------------------------------------------------------------------------------------------------
     MainWindowImpl::MainWindowImpl()
@@ -42,15 +46,19 @@ namespace MinIDE
         , logTabs{form}
         , layout{form}
         , theme{}
+        , treeRenderer{projectTree.renderer()}
     {
     }
 //#####################################################################################################################
     MainWindow::MainWindow()
         : elements_{new MainWindowImpl}
+        , settings_{}
+        , workspace_{&settings_}
     {
         setLayout();
         setupMenu();
         loadTheme({});
+        registerTreeEvents();
     }
 //---------------------------------------------------------------------------------------------------------------------
     void MainWindow::setLayout()
@@ -76,6 +84,7 @@ namespace MinIDE
             if (fb())
             {
                 workspace_.loadWorkspace(fb.file());
+                reloadProjectTree();
             }
         });
         menu.at(0).append("Open Project", [this](nana::menu::item_proxy& ip)
@@ -85,7 +94,11 @@ namespace MinIDE
             if (fb())
             {
                 workspace_.loadWorkspace();
-                workspace_.addProject(filesystem::path{fb.file()}.parent_path());
+                auto* project = workspace_.addProject(filesystem::path{fb.file()}.parent_path());
+                reloadProjectTree();
+                auto item = elements_->projectTree.find("workspace/"s + project->name());
+                for (; !item.empty(); item = item.owner())
+                    item.expand(true);
             }
         });
     }
@@ -96,6 +109,47 @@ namespace MinIDE
         elements_->logTabs.loadTheme(theme);
         elements_->projectTree.bgcolor(theme.largeBackgrounds);
         elements_->projectTree.fgcolor(theme.textForegrounds);
+
+        elements_->treeRenderer.imbueTheme(theme);
+        elements_->projectTree.renderer(elements_->treeRenderer);
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void MainWindow::reloadProjectTree()
+    {
+        elements_->projectTree.insert("workspace", "Workspace").icon("resources/house.png");
+        for (auto const& project : *workspace_.projects())
+        {
+            elements_->projectTree.insert("workspace/"s + project->name(), project->name());
+
+            for (auto const& directory : *project->directories())
+                elements_->projectTree.insert("workspace/"s + project->name() + "/" + directory.string(), directory.filename().string());
+
+            for (auto const& file : *project->files())
+                elements_->projectTree.insert("workspace/"s + project->name() + "/" + file.string(), file.filename().string());
+        }
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void MainWindow::registerTreeEvents()
+    {
+        elements_->projectTree.events().dbl_click([this](nana::arg_mouse const& arg)
+        {
+            if (!arg.is_left_button())
+                return;
+
+            auto item = elements_->projectTree.selected();
+            if (item.empty())
+                return;
+
+            // reconstruct path:
+            path p;
+            auto i = item;
+            for (; !i.empty() && !i.owner().empty() && i.owner().key() != "workspace"; i = i.owner())
+                p = path{i.key()} / p;
+
+            auto* project = workspace_.projectByName(i.key());
+            if (project)
+                elements_->editor.loadFile(project->rootDir(), p);
+        });
     }
 //---------------------------------------------------------------------------------------------------------------------
     MainWindow::~MainWindow() = default;
