@@ -34,6 +34,11 @@ namespace MinIDE
         setLayout();
     }
 //---------------------------------------------------------------------------------------------------------------------
+    void LogTabs::addText(std::string const& data)
+    {
+        elements_->log.caption(elements_->log.caption() + data);
+    }
+//---------------------------------------------------------------------------------------------------------------------
     void LogTabs::setLayout()
     {
         elements_->layout.div(layoutString);

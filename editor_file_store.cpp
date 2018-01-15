@@ -96,12 +96,16 @@ namespace MinIDE
                     select(i);
                     return i;
                 }
-                break;
+            }
+            else if (file.displayName() == relativeToRootName.string() && file.file() == absolute)
+            {
+                select(i);
+                return i;
             }
         }
 
         FileStoreEntry entry{
-            (foundDuplicateName ? relativeToRootName.filename() : relativeToRootName).string(),
+            (foundDuplicateName ? relativeToRootName : relativeToRootName.filename()).string(),
             absolute,
             {}
         };
@@ -110,6 +114,14 @@ namespace MinIDE
         files_.push_back(entry);
         select(size() - 1);
         return index();
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void FileStore::synchronizeAllToDisk()
+    {
+        for (auto const& file : files_)
+        {
+            file.synchronizeToDisk();
+        }
     }
 //---------------------------------------------------------------------------------------------------------------------
     std::size_t FileStore::index() const
@@ -145,8 +157,25 @@ namespace MinIDE
         return true;
     }
 //---------------------------------------------------------------------------------------------------------------------
+    bool FileStore::remove(std::string const& filename)
+    {
+        std::size_t counter = 0;
+        for (auto const& i : files_)
+        {
+            if (i.file().string() == filename)
+                break;
+            ++counter;
+        }
+        if (counter == size())
+            return false;
+        remove(counter);
+        return true;
+    }
+//---------------------------------------------------------------------------------------------------------------------
     void FileStore::select(std::size_t which)
     {
+        if (empty())
+            return;
         selected_ = std::max(which, std::size_t{0}) % files_.size();
     }
 //---------------------------------------------------------------------------------------------------------------------

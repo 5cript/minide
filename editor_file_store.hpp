@@ -85,6 +85,14 @@ namespace MinIDE
         bool remove(std::size_t which);
 
         /**
+         *  Remove selected file from the store.
+         *  Will issue a prompt for save/discard changes.
+         *
+         *  @return Return False if remove was rejected!
+         */
+        bool remove(std::string const& filename);
+
+        /**
          *  Selects a file in the store, will loop if which > size.
          */
         void select(std::size_t which);
@@ -93,6 +101,19 @@ namespace MinIDE
          *  Get the selected entry.
          */
         FileStoreEntry& selected();
+
+        /**
+         *  Gets a file store at the specified index.
+         */
+        FileStoreEntry& operator[](std::size_t index)
+        {
+            return files_[index];
+        }
+
+        /**
+         *  Save memory to disk for all files.
+         */
+        void synchronizeAllToDisk();
 
         /**
          *  Return the index.

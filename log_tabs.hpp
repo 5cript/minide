@@ -24,6 +24,7 @@ namespace MinIDE
         ~LogTabs();
 
         void loadTheme(Theme const& theme);
+        void addText(std::string const& data);
 
     private:
         void setLayout();

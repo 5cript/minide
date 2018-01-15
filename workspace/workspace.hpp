@@ -32,6 +32,11 @@ namespace MinIDE
         Project* addProject(path const& relativeProjectDir);
 
         /**
+         *  Get the active project.
+         */
+        Project* activeProject();
+
+        /**
          *  Retrieve projects.
          */
         std::vector <std::unique_ptr <Project>>* projects();
