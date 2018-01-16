@@ -5,8 +5,9 @@
 namespace MinIDE
 {
 //#####################################################################################################################
-    Project::Project(Settings* settings)
+    Project::Project(Settings* settings, Environment* environment)
         : settings_{settings}
+        , environment_{environment}
         , files_{}
     {
     }

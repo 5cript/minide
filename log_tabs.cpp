@@ -18,7 +18,7 @@ namespace MinIDE
             , log{panel}
             , layout{panel}
         {
-            log.editable(false);
+            //log.editable(false);
 
             tabs.push_back("Build log");
             tabs.push_back("Build messages");
@@ -37,6 +37,11 @@ namespace MinIDE
     void LogTabs::addText(std::string const& data)
     {
         elements_->log.caption(elements_->log.caption() + data);
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void LogTabs::clear()
+    {
+        elements_->log.caption("");
     }
 //---------------------------------------------------------------------------------------------------------------------
     void LogTabs::setLayout()

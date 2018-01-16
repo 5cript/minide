@@ -13,7 +13,7 @@ namespace MinIDE
     class Workspace
     {
     public:
-        Workspace(Settings* settings);
+        Workspace(Settings* settings, Environment* environment);
         ~Workspace() = default;
 
         /**
@@ -48,6 +48,7 @@ namespace MinIDE
 
     private:
         Settings* settings_;
+        Environment* environment_;
         path workspaceRoot_;
         boost::optional <path> workspaceFile_;
         std::vector <std::unique_ptr <Project>> projects_;

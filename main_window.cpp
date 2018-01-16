@@ -59,7 +59,8 @@ namespace MinIDE
     MainWindow::MainWindow()
         : elements_{new MainWindowImpl}
         , settings_{}
-        , workspace_{&settings_}
+        , environment_{}
+        , workspace_{&settings_, &environment_}
     {
         setLayout();
         setupMenu();
@@ -180,22 +181,50 @@ namespace MinIDE
     {
         elements_->toolbar.events().selected([this](auto const& event)
         {
+            auto* activeProject = workspace_.activeProject();
+            if (!activeProject)
+                return;
+
             switch (static_cast <ToolbarElement> (event.button))
             {
-            case ToolbarElement::Save:
-                elements_->editor.save();
-                break;
-            case ToolbarElement::SaveAll:
-                elements_->editor.saveAll();
-                break;
-            case ToolbarElement::CMake:
-                auto* activeProject = workspace_.activeProject();
-                activeProject->setProcessOutputCallback([this](std::string const& str){
-                    elements_->logTabs.addText(str);
-                });
-                if (activeProject)
+                default: break;
+                case ToolbarElement::CMake:
+                case ToolbarElement::Build:
+                case ToolbarElement::Run:
+                    activeProject->setProcessOutputCallback([this](std::string const& str){
+                        elements_->logTabs.addText(str);
+                    });
+                    elements_->logTabs.clear();
+            }
+
+            switch (static_cast <ToolbarElement> (event.button))
+            {
+                default: break;
+                case ToolbarElement::Save:
+                {
+                    elements_->editor.save();
+                    break;
+                }
+                case ToolbarElement::SaveAll:
+                {
+                    elements_->editor.saveAll();
+                    break;
+                }
+                case ToolbarElement::CMake:
+                {
                     activeProject->buildStep(0, true); // CMAKE
-                break;
+                    break;
+                }
+                case ToolbarElement::Build:
+                {
+                    activeProject->buildStep(1, true); // MAKE
+                    break;
+                }
+                case ToolbarElement::Run:
+                {
+                    activeProject->run(true); // RUN
+                    break;
+                }
             }
         });
     }

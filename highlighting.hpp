@@ -16,14 +16,14 @@ namespace MinIDE
     {
         const HighlightingColorScheme CppDefault {
             {
-                {"core_lang_operators", {nana::color_rgb{0x569CD6}, nana::color_rgb{0x303030}}},
-                {"core_lang_other", {nana::color_rgb{0x569CD6}, nana::color_rgb{0x303030}}},
-                {"core_lang_casts", {nana::color_rgb{0x569CD6}, nana::color_rgb{0x303030}}},
-                {"core_lang_types", {nana::color_rgb{0x569CD6}, nana::color_rgb{0x303030}}},
-                {"core_lang_qualifiers", {nana::color_rgb{0x569CD6}, nana::color_rgb{0x303030}}},
-                {"core_lang_ctrl", {nana::color_rgb{0x569CD6}, nana::color_rgb{0x303030}}},
-                {"core_lang_typesys", {nana::color_rgb{0x569CD6}, nana::color_rgb{0x303030}}},
-                {"stl", {nana::color_rgb{0x008080}, nana::color_rgb{0x303030}}}
+                {"core_lang_operators", {static_cast <nana::color_rgb>(0x569CD6), static_cast <nana::color_rgb>(0x303030)}},
+                {"core_lang_other", {static_cast <nana::color_rgb>(0x569CD6), static_cast <nana::color_rgb>(0x303030)}},
+                {"core_lang_casts", {static_cast <nana::color_rgb>(0x569CD6), static_cast <nana::color_rgb>(0x303030)}},
+                {"core_lang_types", {static_cast <nana::color_rgb>(0x569CD6), static_cast <nana::color_rgb>(0x303030)}},
+                {"core_lang_qualifiers", {static_cast <nana::color_rgb>(0x569CD6), static_cast <nana::color_rgb>(0x303030)}},
+                {"core_lang_ctrl", {static_cast <nana::color_rgb>(0x569CD6), static_cast <nana::color_rgb>(0x303030)}},
+                {"core_lang_typesys", {static_cast <nana::color_rgb>(0x569CD6), static_cast <nana::color_rgb>(0x303030)}},
+                {"stl", {static_cast <nana::color_rgb>(0x008080), static_cast <nana::color_rgb>(0x303030)}}
             }
         };
     }

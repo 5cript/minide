@@ -4,19 +4,20 @@
 #include <boost/range/iterator_range.hpp>
 #include <iostream>
 #include <stdexcept>
+#include <cstdio>
 
 using namespace std::string_literals;
 
 namespace MinIDE
 {
 //#####################################################################################################################
-    CMakeProject::CMakeProject(Settings* settings, path const& rootDir)
-        : Project{settings}
+    CMakeProject::CMakeProject(Settings* settings, Environment* environment, path const& rootDir)
+        : Project{settings, environment}
     {
-        loadEnvironment(rootDir);
+        load(rootDir);
     }
 //---------------------------------------------------------------------------------------------------------------------
-    void CMakeProject::loadEnvironment(path const& rootDir)
+    void CMakeProject::load(path const& rootDir)
     {
         rootDir_ = rootDir;
 
@@ -27,23 +28,26 @@ namespace MinIDE
             throw std::invalid_argument("This is not a CMake directory");
 
         glob(rootDir, settings_->cmakeProjectSettings.globbing.masks, settings_->cmakeProjectSettings.globbing.dirBlacklist);
+
+        _putenv(("PATH="s + environment_->path).c_str());
     }
 //---------------------------------------------------------------------------------------------------------------------
     void CMakeProject::buildStep(int step, bool debug)
     {
-        if (step == 0)
+        switch (step)
+        {
+        case 0:
             runCMake(debug);
+            break;
+        case 1:
+            runMake(debug);
+            break;
+        }
     }
 //---------------------------------------------------------------------------------------------------------------------
     void CMakeProject::runCMake(bool debug)
     {
-        auto dir = rootDir_;
-        if (debug)
-            dir /= settings_->cmakeProjectSettings.debugOutputDir;
-        else
-            dir /= settings_->cmakeProjectSettings.releaseOutputDir;
-
-        filesystem::create_directory(dir);
+        auto dir = buildDir(debug);
 
         process_ = std::make_unique <AsyncProcess> (
             settings_->toolDirectory
@@ -52,7 +56,44 @@ namespace MinIDE
                 + " \""s
                 + rootDir_.string()
                 + "\" "
-                + settings_->cmakeProjectSettings.cmakeParameters,
+                + settings_->cmakeProjectSettings.cmakeParameters
+            , dir.string()
+            , cb_
+        );
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void CMakeProject::runMake(bool debug)
+    {
+        auto dir = buildDir(debug);
+
+        process_ = std::make_unique <AsyncProcess> (
+            settings_->toolDirectory
+                + "/"
+                + settings_->makeCommand
+                + " -C \""s
+                + dir.string()
+                + "\""
+            , dir.string()
+            , cb_
+        );
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    path CMakeProject::buildDir(bool debug) const
+    {
+        auto dir = rootDir_;
+        if (debug)
+            dir /= settings_->cmakeProjectSettings.debugOutputDir;
+        else
+            dir /= settings_->cmakeProjectSettings.releaseOutputDir;
+        filesystem::create_directory(dir);
+        return dir;
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void CMakeProject::run(bool debug)
+    {
+        auto dir = buildDir(debug);
+        process_ = std::make_unique <AsyncProcess> (
+            (dir / "faky.exe").string(),
             dir.string(),
             cb_
         );

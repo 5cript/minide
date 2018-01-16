@@ -36,6 +36,7 @@ namespace MinIDE
     private:
         std::unique_ptr <MainWindowImpl> elements_;
         Settings settings_;
+        Environment environment_;
         Workspace workspace_;
     };
 }

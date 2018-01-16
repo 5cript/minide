@@ -25,6 +25,7 @@ namespace MinIDE
 
         void loadTheme(Theme const& theme);
         void addText(std::string const& data);
+        void clear();
 
     private:
         void setLayout();
