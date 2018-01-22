@@ -1,7 +1,6 @@
 #pragma once
 
-#include "../settings/environment.hpp"
-#include "../settings/settings.hpp"
+#include "../global_settings/global_persistence.hpp"
 #include "../filesystem.hpp"
 
 namespace MinIDE
@@ -9,7 +8,7 @@ namespace MinIDE
     class Project
     {
     public:
-        Project(Settings* settings, Environment* environment);
+        Project(GlobalPersistence* settings, std::string* currentEnvironment);
         virtual ~Project() = default;
 
         virtual void load(path const& rootDir) = 0;
@@ -38,8 +37,8 @@ namespace MinIDE
         );
 
     protected:
-        Settings* settings_;
-        Environment* environment_;
+        GlobalPersistence* settings_;
+        std::string* currentEnvironment_;
         path rootDir_;
         std::vector <path> files_;
         std::vector <path> directories_;

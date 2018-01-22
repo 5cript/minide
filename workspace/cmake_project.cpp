@@ -11,14 +11,15 @@ using namespace std::string_literals;
 namespace MinIDE
 {
 //#####################################################################################################################
-    CMakeProject::CMakeProject(Settings* settings, Environment* environment, path const& rootDir)
-        : Project{settings, environment}
+    CMakeProject::CMakeProject(GlobalPersistence* settings, std::string* currentEnvironment, path const& rootDir)
+        : Project{settings, currentEnvironment}
     {
         load(rootDir);
     }
 //---------------------------------------------------------------------------------------------------------------------
     void CMakeProject::load(path const& rootDir)
     {
+        /*
         rootDir_ = rootDir;
 
         std::cout << rootDir.string() << "\n";
@@ -30,6 +31,7 @@ namespace MinIDE
         glob(rootDir, settings_->cmakeProjectSettings.globbing.masks, settings_->cmakeProjectSettings.globbing.dirBlacklist);
 
         _putenv(("PATH="s + environment_->path).c_str());
+        */
     }
 //---------------------------------------------------------------------------------------------------------------------
     void CMakeProject::buildStep(int step, bool debug)
@@ -47,6 +49,7 @@ namespace MinIDE
 //---------------------------------------------------------------------------------------------------------------------
     void CMakeProject::runCMake(bool debug)
     {
+        /*
         auto dir = buildDir(debug);
 
         process_ = std::make_unique <AsyncProcess> (
@@ -60,10 +63,12 @@ namespace MinIDE
             , dir.string()
             , cb_
         );
+        */
     }
 //---------------------------------------------------------------------------------------------------------------------
     void CMakeProject::runMake(bool debug)
     {
+        /*
         auto dir = buildDir(debug);
 
         process_ = std::make_unique <AsyncProcess> (
@@ -76,10 +81,12 @@ namespace MinIDE
             , dir.string()
             , cb_
         );
+        */
     }
 //---------------------------------------------------------------------------------------------------------------------
     path CMakeProject::buildDir(bool debug) const
     {
+        /*
         auto dir = rootDir_;
         if (debug)
             dir /= settings_->cmakeProjectSettings.debugOutputDir;
@@ -87,16 +94,19 @@ namespace MinIDE
             dir /= settings_->cmakeProjectSettings.releaseOutputDir;
         filesystem::create_directory(dir);
         return dir;
+        */
     }
 //---------------------------------------------------------------------------------------------------------------------
     void CMakeProject::run(bool debug)
     {
+        /*
         auto dir = buildDir(debug);
         process_ = std::make_unique <AsyncProcess> (
             (dir / "faky.exe").string(),
             dir.string(),
             cb_
         );
+        */
     }
 //#####################################################################################################################
 }

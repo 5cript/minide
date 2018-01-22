@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../settings/settings.hpp"
+#include "../global_settings/global_persistence.hpp"
 #include "project.hpp"
 #include "../filesystem.hpp"
 
@@ -13,7 +13,7 @@ namespace MinIDE
     class Workspace
     {
     public:
-        Workspace(Settings* settings, Environment* environment);
+        Workspace(GlobalPersistence* settings, std::string* currentEnvironment);
         ~Workspace() = default;
 
         /**
@@ -47,8 +47,8 @@ namespace MinIDE
         Project* projectByName(std::string const& name);
 
     private:
-        Settings* settings_;
-        Environment* environment_;
+        GlobalPersistence* settings_;
+        std::string* currentEnvironment_;
         path workspaceRoot_;
         boost::optional <path> workspaceFile_;
         std::vector <std::unique_ptr <Project>> projects_;

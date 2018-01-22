@@ -5,9 +5,9 @@
 namespace MinIDE
 {
 //#####################################################################################################################
-    Workspace::Workspace(Settings* settings, Environment* environment)
+    Workspace::Workspace(GlobalPersistence* settings, std::string* currentEnvironment)
         : settings_{settings}
-        , environment_{environment}
+        , currentEnvironment_{currentEnvironment}
         , workspaceRoot_{}
         , workspaceFile_{}
         , projects_{}
@@ -36,8 +36,8 @@ namespace MinIDE
         auto projectDir = workspaceRoot_ / relativeProjectDir;
         if (filesystem::exists(projectDir / "CMakeLists.txt"))
         {
-            projects_.push_back(std::make_unique <CMakeProject> (settings_, environment_, projectDir));
-            return projects_.back().get();
+            //projects_.push_back(std::make_unique <CMakeProject> (settings_, environment_, projectDir));
+            //return projects_.back().get();
         }
         return nullptr;
     }

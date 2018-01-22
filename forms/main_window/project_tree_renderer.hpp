@@ -1,6 +1,6 @@
 #pragma once
 
-#include "theme.hpp"
+#include "../../theme.hpp"
 #include <nana/gui/widgets/treebox.hpp>
 
 namespace MinIDE

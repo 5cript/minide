@@ -87,9 +87,12 @@ namespace MinIDE
         elements_->tabs.toolbox(nana::tabbar<int>::kits::close, true);
         elements_->tabs.toolbox(nana::tabbar<int>::kits::list, true);
         elements_->tabs.toolbox(nana::tabbar<int>::kits::scroll, true);
+
+        // Textbox setup
         setEditorEnabled(false);
         setHighlighting({DefaultHighlighting::CppDefault});
         elements_->textbox.typeface({"Consolas", 12});
+        elements_->textbox.indention(true);
     }
 //---------------------------------------------------------------------------------------------------------------------
     Editor::~Editor() = default;
@@ -139,6 +142,8 @@ namespace MinIDE
 
         setEditorEnabled(true);
         tabSynchronize();
+
+        elements_->textbox.colored_area_access();
 
         //elements_->textbox.load(filename.string());
     }
@@ -238,7 +243,8 @@ namespace MinIDE
         if (kbEvent.key == 'S' && kbEvent.ctrl && kbEvent.shift)
             saveAll();
 
-        // Automatic Whitespice fill in front
+        // Automatic Whitespace fill in front
+        #if 0
         if (kbEvent.key == nana::keyboard::enter)
         {
             auto yPrevious = elements_->textbox.caret_pos().y - 1;
@@ -258,6 +264,7 @@ namespace MinIDE
             }
             return;
         }
+        #endif
     }
 //#####################################################################################################################
 }

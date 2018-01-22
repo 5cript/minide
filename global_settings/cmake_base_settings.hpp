@@ -1,10 +1,12 @@
 #pragma once
 
-#include "globSettings.hpp"
+#include "globber_settings.hpp"
+#include "../json_public.hpp"
 
 namespace MinIDE
 {
-    struct CMakeProjectSettings
+    struct CMakeBaseSettings : public JSON::Stringifiable <CMakeBaseSettings>
+                             , public JSON::Parsable <CMakeBaseSettings>
     {
         GlobSettings globbing;
         std::string debugOutputDir = "build_debug";
@@ -13,3 +15,9 @@ namespace MinIDE
         std::string makeParameters = "-j4";
     };
 }
+
+BOOST_FUSION_ADAPT_STRUCT
+(
+    MinIDE::CMakeBaseSettings,
+    globbing, debugOutputDir, releaseOutputDir, cmakeParameters, makeParameters
+)

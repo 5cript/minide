@@ -1,8 +1,7 @@
 #pragma once
 
-#include "workspace/workspace.hpp"
-#include "theme.hpp"
-#include "settings/settings.hpp"
+#include "../global_settings/global_persistence.hpp"
+#include "../theme.hpp"
 
 #include <memory>
 
@@ -18,7 +17,7 @@ namespace MinIDE
         ;
 
     public:
-        MainWindow();
+        MainWindow(GlobalPersistence* globalSettings);
         ~MainWindow();
 
         void show();
@@ -35,8 +34,5 @@ namespace MinIDE
 
     private:
         std::unique_ptr <MainWindowImpl> elements_;
-        Settings settings_;
-        Environment environment_;
-        Workspace workspace_;
     };
 }

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "filesystem.hpp"
-#include "copyability.hpp"
-#include "theme.hpp"
+#include "../../filesystem.hpp"
+#include "../../copyability.hpp"
+#include "../../theme.hpp"
 #include "highlighting.hpp"
 
 #include <nana/gui/widgets/panel.hpp>

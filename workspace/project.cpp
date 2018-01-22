@@ -5,9 +5,9 @@
 namespace MinIDE
 {
 //#####################################################################################################################
-    Project::Project(Settings* settings, Environment* environment)
+    Project::Project(GlobalPersistence* settings, std::string* currentEnvironment)
         : settings_{settings}
-        , environment_{environment}
+        , currentEnvironment_{currentEnvironment}
         , files_{}
     {
     }

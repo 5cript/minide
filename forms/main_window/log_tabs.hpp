@@ -1,7 +1,7 @@
 #pragma once
 
-#include "copyability.hpp"
-#include "theme.hpp"
+#include "../../copyability.hpp"
+#include "../../theme.hpp"
 
 #include <nana/gui/widgets/panel.hpp>
 #include <memory>

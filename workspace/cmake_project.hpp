@@ -2,7 +2,7 @@
 
 #include "project.hpp"
 
-#include "../settings/settings.hpp"
+#include "../global_settings/global_persistence.hpp"
 #include "../async_process.hpp"
 #include "../copyability.hpp"
 
@@ -14,7 +14,7 @@ namespace MinIDE
         NONCOPY(CMakeProject);
 
     public:
-        CMakeProject(Settings* settings, Environment* environment, path const& rootDir);
+        CMakeProject(GlobalPersistence* settings, std::string* currentEnvironment, path const& rootDir);
 
         void load(path const& rootDir) override;
         void buildStep(int step, bool debug) override;

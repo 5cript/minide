@@ -1,9 +1,18 @@
 #include "main_window.hpp"
-#include "editor.hpp"
-#include "log_tabs.hpp"
-#include "project_tree_renderer.hpp"
-#include "toolbar.hpp"
+#include "main_window/editor.hpp"
+#include "main_window/log_tabs.hpp"
+#include "main_window/project_tree_renderer.hpp"
+#include "main_window/toolbar.hpp"
 
+// Persistence Related
+#include "../workspace/workspace.hpp"
+#include "../global_settings/build_base_settings.hpp"
+
+// Other GUIs
+#include "environment_options.hpp"
+#include "tool_options.hpp"
+
+// Widgets
 #include <nana/gui/msgbox.hpp>
 #include <nana/gui/place.hpp>
 #include <nana/gui/widgets/form.hpp>
@@ -21,7 +30,7 @@ namespace MinIDE
 //#####################################################################################################################
     struct MainWindowImpl
     {
-        MainWindowImpl();
+        MainWindowImpl(GlobalPersistence* persistence);
 
         // Form
         nana::form form;
@@ -40,9 +49,14 @@ namespace MinIDE
         Theme theme;
         ProjectTreeRenderer treeRenderer;
         int lastMenuKeypress; // workaround, because
+
+        // Settings
+        GlobalPersistence* persistence;
+        std::string currentEnvironment;
+        Workspace workspace;
     };
 //---------------------------------------------------------------------------------------------------------------------
-    MainWindowImpl::MainWindowImpl()
+    MainWindowImpl::MainWindowImpl(GlobalPersistence* persistence)
         : form{nana::API::make_center(1000,600)}
         , menu{form}
         , projectTree{form}
@@ -53,14 +67,14 @@ namespace MinIDE
         , theme{}
         , treeRenderer{projectTree.renderer()}
         , lastMenuKeypress{0}
+        , persistence{persistence}
+        , currentEnvironment{}
+        , workspace{persistence, &currentEnvironment}
     {
     }
 //#####################################################################################################################
-    MainWindow::MainWindow()
-        : elements_{new MainWindowImpl}
-        , settings_{}
-        , environment_{}
-        , workspace_{&settings_, &environment_}
+    MainWindow::MainWindow(GlobalPersistence* globalSettings)
+        : elements_{new MainWindowImpl(globalSettings)}
     {
         setLayout();
         setupMenu();
@@ -98,7 +112,7 @@ namespace MinIDE
             fb.add_filter("MinIDE Workspace", "*.midews");
             if (fb())
             {
-                workspace_.loadWorkspace(fb.file());
+                elements_->workspace.loadWorkspace(fb.file());
                 reloadProjectTree();
             }
         });
@@ -108,13 +122,26 @@ namespace MinIDE
             fb.add_filter("CMakeLists", "CMakeLists.txt");
             if (fb())
             {
-                workspace_.loadWorkspace();
-                auto* project = workspace_.addProject(filesystem::path{fb.file()}.parent_path());
+                elements_->workspace.loadWorkspace();
+                auto* project = elements_->workspace.addProject(filesystem::path{fb.file()}.parent_path());
                 reloadProjectTree();
                 auto item = elements_->projectTree.find("workspace/"s + project->name());
                 for (; !item.empty(); item = item.owner())
                     item.expand(true);
             }
+        });
+
+        menu.push_back("Settings");
+        menu.at(1).append("Environment Settings", [this](auto& item)
+        {
+            EnvironmentOptions envOpts{elements_->persistence};
+            envOpts.show();
+        });
+
+        menu.at(1).append("Tool Settings", [this](auto& item)
+        {
+            ToolOptions toolOpts{elements_->persistence};
+            toolOpts.show();
         });
 
         // WORKAROUND - Alt Gr is not focusing the menu anymore
@@ -142,7 +169,7 @@ namespace MinIDE
     void MainWindow::reloadProjectTree()
     {
         elements_->projectTree.insert("workspace", "Workspace").icon("resources/house.png");
-        for (auto const& project : *workspace_.projects())
+        for (auto const& project : *elements_->workspace.projects())
         {
             elements_->projectTree.insert("workspace/"s + project->name(), project->name());
 
@@ -171,7 +198,7 @@ namespace MinIDE
             for (; !i.empty() && !i.owner().empty() && i.owner().key() != "workspace"; i = i.owner())
                 p = path{i.key()} / p;
 
-            auto* project = workspace_.projectByName(i.key());
+            auto* project = elements_->workspace.projectByName(i.key());
             if (project)
                 elements_->editor.loadFile(project->rootDir(), p);
         });
@@ -181,7 +208,7 @@ namespace MinIDE
     {
         elements_->toolbar.events().selected([this](auto const& event)
         {
-            auto* activeProject = workspace_.activeProject();
+            auto* activeProject = elements_->workspace.activeProject();
             if (!activeProject)
                 return;
 
