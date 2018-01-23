@@ -57,6 +57,7 @@ namespace MinIDE
         {
             switch(status)
             {
+            default: break;
             case status_type::selecting:
                 //If status_on is true, the item is selecting.
                 //If status on is false, the item is unselecting

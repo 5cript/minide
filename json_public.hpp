@@ -3,6 +3,10 @@
 #include <SimpleJSON/stringify/jss_fusion_adapted_struct.hpp>
 #include <SimpleJSON/parse/jsd_fusion_adapted_struct.hpp>
 #include <SimpleJSON/parse/jsd_convenience.hpp>
+#include <SimpleJSON/utility/beauty_stream.hpp>
+
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/device/file.hpp>
 
 #include "filesystem.hpp"
 
@@ -19,16 +23,19 @@ namespace MinIDE
     void save(path const& p) const override; \
     void load(path const& p) override
 
-#define IMPLEMENT_SERIALIZABLE(name) \
+#define IMPLEMENT_SERIALIZABLE(name, is_binary) \
     void name::save(filesystem::path const& p) const { \
+        namespace io = boost::iostreams; \
+        io::filtering_ostream out; \
+        out.push(JSON::BeautifiedStreamWrapper{}); \
+        out.push(io::file_sink(p.string())); \
         JSON::StringificationOptions opts; \
-        opts.strings_are_binary = true; \
-        auto writer = std::ofstream{p.string(), std::ios_base::binary}; \
-        JSON::stringify(writer, "minide", *this, opts); \
+        opts.strings_are_binary = is_binary; \
+        JSON::stringify(out, "minide", *this, opts); \
     } \
     void name::load(filesystem::path const& p) { \
         JSON::ParsingOptions opts; \
-        opts.strings_are_binary = true; \
+        opts.strings_are_binary = is_binary; \
         auto stream = std::ifstream{p.string(), std::ios_base::binary}; \
         auto tree = JSON::parse_json(stream); \
         JSON::fill_missing <decltype(*this)> ("", tree); \

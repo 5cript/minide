@@ -14,7 +14,7 @@ namespace MinIDE
         SERIALIZABLE;
 
         std::unordered_map <std::string, Environment> environments;
-        Tools tooling;
+        std::unordered_map <std::string, Tools> tooling;
         CMakeBaseSettings cmakeBaseSettings;
 
         void load();

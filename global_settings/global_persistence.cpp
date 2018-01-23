@@ -8,7 +8,7 @@
 namespace MinIDE
 {
 //#####################################################################################################################
-    IMPLEMENT_SERIALIZABLE(GlobalPersistence)
+    IMPLEMENT_SERIALIZABLE(GlobalPersistence, true)
 //---------------------------------------------------------------------------------------------------------------------
     void GlobalPersistence::load()
     {

@@ -14,16 +14,16 @@ namespace MinIDE
         NONCOPY(CMakeProject);
 
     public:
-        CMakeProject(GlobalPersistence* settings, std::string* currentEnvironment, path const& rootDir);
+        CMakeProject(GlobalPersistence* settings, path const& rootDir);
 
         void load(path const& rootDir) override;
-        void buildStep(int step, bool debug) override;
-        void run(bool debug) override;
+        void buildStep(int step) override;
+        void run() override;
 
     private:
-        void runCMake(bool debug);
-        void runMake(bool debug);
-        path buildDir(bool debug) const;
+        void runCMake();
+        void runMake();
+        path buildDir() const;
         std::unique_ptr <AsyncProcess> process_;
     };
 }

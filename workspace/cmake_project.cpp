@@ -1,4 +1,5 @@
 #include "cmake_project.hpp"
+#include "project_impl.hpp"
 #include "globber.hpp"
 
 #include <boost/range/iterator_range.hpp>
@@ -11,43 +12,43 @@ using namespace std::string_literals;
 namespace MinIDE
 {
 //#####################################################################################################################
-    CMakeProject::CMakeProject(GlobalPersistence* settings, std::string* currentEnvironment, path const& rootDir)
-        : Project{settings, currentEnvironment}
+    CMakeProject::CMakeProject(GlobalPersistence* settings, path const& rootDir)
+        : Project{settings}
     {
         load(rootDir);
     }
 //---------------------------------------------------------------------------------------------------------------------
     void CMakeProject::load(path const& rootDir)
     {
-        /*
-        rootDir_ = rootDir;
-
-        std::cout << rootDir.string() << "\n";
+        Project::load(rootDir);
 
         // Should never be possible to throw. Safeguard.
         if (!filesystem::exists(rootDir / "CMakeLists.txt"))
             throw std::invalid_argument("This is not a CMake directory");
 
-        glob(rootDir, settings_->cmakeProjectSettings.globbing.masks, settings_->cmakeProjectSettings.globbing.dirBlacklist);
+        glob(
+            rootDir,
+            impl_->settings->cmakeBaseSettings.globbing.masks,
+            impl_->settings->cmakeBaseSettings.globbing.dirBlacklist
+        );
 
-        _putenv(("PATH="s + environment_->path).c_str());
-        */
+        //_putenv(("PATH="s + environment_->path).c_str());
     }
 //---------------------------------------------------------------------------------------------------------------------
-    void CMakeProject::buildStep(int step, bool debug)
+    void CMakeProject::buildStep(int step)
     {
         switch (step)
         {
         case 0:
-            runCMake(debug);
+            runCMake();
             break;
         case 1:
-            runMake(debug);
+            runMake();
             break;
         }
     }
 //---------------------------------------------------------------------------------------------------------------------
-    void CMakeProject::runCMake(bool debug)
+    void CMakeProject::runCMake()
     {
         /*
         auto dir = buildDir(debug);
@@ -66,7 +67,7 @@ namespace MinIDE
         */
     }
 //---------------------------------------------------------------------------------------------------------------------
-    void CMakeProject::runMake(bool debug)
+    void CMakeProject::runMake()
     {
         /*
         auto dir = buildDir(debug);
@@ -84,7 +85,7 @@ namespace MinIDE
         */
     }
 //---------------------------------------------------------------------------------------------------------------------
-    path CMakeProject::buildDir(bool debug) const
+    path CMakeProject::buildDir() const
     {
         /*
         auto dir = rootDir_;
@@ -97,7 +98,7 @@ namespace MinIDE
         */
     }
 //---------------------------------------------------------------------------------------------------------------------
-    void CMakeProject::run(bool debug)
+    void CMakeProject::run()
     {
         /*
         auto dir = buildDir(debug);

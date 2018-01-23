@@ -13,7 +13,7 @@ namespace MinIDE
     {
     public:
         constexpr static const char* layoutString =
-            "<vertical <weight=25><toolbar weight=25> <<weight=15% projectBox>|<vertical <weight=70% editor>|<logTabs>>>"
+            #include "layouts/MainWindow.layout"
         ;
 
     public:
@@ -31,6 +31,7 @@ namespace MinIDE
         void registerTreeEvents();
         void populateToolbar();
         void setupToolbarEvents();
+        void refreshTargets();
 
     private:
         std::unique_ptr <MainWindowImpl> elements_;

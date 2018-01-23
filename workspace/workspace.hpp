@@ -13,7 +13,7 @@ namespace MinIDE
     class Workspace
     {
     public:
-        Workspace(GlobalPersistence* settings, std::string* currentEnvironment);
+        Workspace(GlobalPersistence* settings);
         ~Workspace() = default;
 
         /**
@@ -48,7 +48,6 @@ namespace MinIDE
 
     private:
         GlobalPersistence* settings_;
-        std::string* currentEnvironment_;
         path workspaceRoot_;
         boost::optional <path> workspaceFile_;
         std::vector <std::unique_ptr <Project>> projects_;

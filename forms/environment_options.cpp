@@ -2,7 +2,6 @@
 #include "environment_options/listbox_inline.hpp"
 
 #include <nana/gui/place.hpp>
-#include <nana/gui/widgets/form.hpp>
 #include <nana/gui/widgets/listbox.hpp>
 #include <nana/gui/widgets/label.hpp>
 #include <nana/gui/widgets/button.hpp>
@@ -19,7 +18,7 @@ namespace MinIDE
 //#####################################################################################################################
     struct EnvironmentOptionsImpl
     {
-        EnvironmentOptionsImpl(GlobalPersistence* settings);
+        EnvironmentOptionsImpl(nana::window owner, GlobalPersistence* settings);
 
         // Form
         nana::form form;
@@ -45,8 +44,8 @@ namespace MinIDE
         bool dirty; // dirty = some changes were made
     };
 //---------------------------------------------------------------------------------------------------------------------
-    EnvironmentOptionsImpl::EnvironmentOptionsImpl(GlobalPersistence* settings)
-        : form{nana::API::make_center(600,400)}
+    EnvironmentOptionsImpl::EnvironmentOptionsImpl(nana::window owner, GlobalPersistence* settings)
+        : form{owner, nana::API::make_center(owner, 600, 400)}
         , envVars{form}
         , addProfile{form, "Add Profile"}
         , removeProfile{form, "Delete Profile"}
@@ -60,16 +59,14 @@ namespace MinIDE
         , lastSelectedProfile{""}
         , dirty{false}
     {
-
     }
 //#####################################################################################################################
-    EnvironmentOptions::EnvironmentOptions(GlobalPersistence* settings)
-        : elements_{new EnvironmentOptionsImpl(settings)}
+    EnvironmentOptions::EnvironmentOptions(nana::window owner, GlobalPersistence* settings)
+        : elements_{new EnvironmentOptionsImpl(owner, settings)}
     {
         setupEnvironmentListbox();
         setupLayout();
         setupEvents();
-        disableAllOrSelect();
         loadEnvironments();
     }
 //---------------------------------------------------------------------------------------------------------------------
@@ -84,8 +81,8 @@ namespace MinIDE
 //---------------------------------------------------------------------------------------------------------------------
     void EnvironmentOptions::show()
     {
+        nana::API::modal_window(elements_->form);
         elements_->form.show();
-        elements_->form.wait_for_this();
     }
 //---------------------------------------------------------------------------------------------------------------------
     void EnvironmentOptions::setupEvents()

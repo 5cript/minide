@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../global_settings/global_persistence.hpp"
+#include <nana/gui/widgets/form.hpp>
 #include <memory>
 
 namespace MinIDE
@@ -15,7 +16,7 @@ namespace MinIDE
         ;
 
     public:
-        EnvironmentOptions(GlobalPersistence* settings);
+        EnvironmentOptions(nana::window owner, GlobalPersistence* settings);
         ~EnvironmentOptions();
 
         void show();

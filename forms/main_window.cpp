@@ -19,6 +19,7 @@
 #include <nana/gui/widgets/menubar.hpp>
 #include <nana/gui/widgets/treebox.hpp>
 #include <nana/gui/widgets/toolbar.hpp>
+#include <nana/gui/widgets/combox.hpp>
 #include <nana/gui/filebox.hpp>
 
 #include <iostream>
@@ -41,6 +42,7 @@ namespace MinIDE
         nana::toolbar toolbar;
         Editor editor;
         LogTabs logTabs;
+        nana::combox targetSelector;
 
         // Layout
         nana::place layout;
@@ -52,7 +54,6 @@ namespace MinIDE
 
         // Settings
         GlobalPersistence* persistence;
-        std::string currentEnvironment;
         Workspace workspace;
     };
 //---------------------------------------------------------------------------------------------------------------------
@@ -63,13 +64,13 @@ namespace MinIDE
         , toolbar{form}
         , editor{form}
         , logTabs{form}
+        , targetSelector{form}
         , layout{form}
         , theme{}
         , treeRenderer{projectTree.renderer()}
         , lastMenuKeypress{0}
         , persistence{persistence}
-        , currentEnvironment{}
-        , workspace{persistence, &currentEnvironment}
+        , workspace{persistence}
     {
     }
 //#####################################################################################################################
@@ -82,6 +83,7 @@ namespace MinIDE
         registerTreeEvents();
         populateToolbar();
         setupToolbarEvents();
+        refreshTargets();
     }
 //---------------------------------------------------------------------------------------------------------------------
     void MainWindow::populateToolbar()
@@ -93,13 +95,25 @@ namespace MinIDE
     {
         auto& layout = elements_->layout;
 
-        layout.field("editor") << elements_->editor;
-        layout.field("logTabs") << elements_->logTabs;
-        layout.field("projectBox") << elements_->projectTree;
-        layout.field("toolbar") << elements_->toolbar;
+        layout.field("Editor") << elements_->editor;
+        layout.field("LogTabs") << elements_->logTabs;
+        layout.field("ProjectBox") << elements_->projectTree;
+        layout.field("Toolbar") << elements_->toolbar;
+        layout.field("TargetSelector") << elements_->targetSelector;
 
         layout.div(layoutString);
         layout.collocate();
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void MainWindow::refreshTargets()
+    {
+        /*
+        elements_->environmentSelector.clear();
+        for (auto const& i : elements_->persistence->environments)
+            elements_->environmentSelector.push_back(i.first);
+        if (elements_->environmentSelector.the_number_of_options() > 0)
+            elements_->environmentSelector.option(0);
+        */
     }
 //---------------------------------------------------------------------------------------------------------------------
     void MainWindow::setupMenu()
@@ -124,6 +138,8 @@ namespace MinIDE
             {
                 elements_->workspace.loadWorkspace();
                 auto* project = elements_->workspace.addProject(filesystem::path{fb.file()}.parent_path());
+                if (project == nullptr)
+                    return;
                 reloadProjectTree();
                 auto item = elements_->projectTree.find("workspace/"s + project->name());
                 for (; !item.empty(); item = item.owner())
@@ -134,13 +150,13 @@ namespace MinIDE
         menu.push_back("Settings");
         menu.at(1).append("Environment Settings", [this](auto& item)
         {
-            EnvironmentOptions envOpts{elements_->persistence};
+            EnvironmentOptions envOpts{elements_->form, elements_->persistence};
             envOpts.show();
         });
 
         menu.at(1).append("Tool Settings", [this](auto& item)
         {
-            ToolOptions toolOpts{elements_->persistence};
+            ToolOptions toolOpts{elements_->form, elements_->persistence};
             toolOpts.show();
         });
 
@@ -239,17 +255,17 @@ namespace MinIDE
                 }
                 case ToolbarElement::CMake:
                 {
-                    activeProject->buildStep(0, true); // CMAKE
+                    activeProject->buildStep(0); // CMAKE
                     break;
                 }
                 case ToolbarElement::Build:
                 {
-                    activeProject->buildStep(1, true); // MAKE
+                    activeProject->buildStep(1); // MAKE
                     break;
                 }
                 case ToolbarElement::Run:
                 {
-                    activeProject->run(true); // RUN
+                    activeProject->run(); // RUN
                     break;
                 }
             }

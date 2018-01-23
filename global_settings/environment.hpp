@@ -9,10 +9,7 @@ namespace MinIDE
 {
     struct Environment : public JSON::Stringifiable <Environment>
                        , public JSON::Parsable <Environment>
-                       , public Serializable
     {
-        SERIALIZABLE;
-
         std::string name;
         std::string path;
         std::unordered_map <std::string, std::string> variables;
