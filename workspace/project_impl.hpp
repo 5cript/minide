@@ -19,7 +19,6 @@ namespace MinIDE
         ProjectImpl(GlobalPersistence* settings);
 
         GlobalPersistence* settings;
-        ProjectPersistence::LocalPersistence localPersistence;
         path rootDir;
         std::vector <path> files;
         std::vector <path> directories;

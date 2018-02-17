@@ -4,5 +4,5 @@
 
 JSON_DECLARE_POLYMORPHIC
 (
-    MinIDE::ProjectPersistence::BuildProfile, (MinIDE::ProjectPersistence::CmakeBuildProfile)
+    MinIDE::ProjectPersistence::BuildProfile, (MinIDE::ProjectPersistence::CMakeBuildProfile)
 )

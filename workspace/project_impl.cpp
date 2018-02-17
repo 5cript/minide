@@ -5,7 +5,6 @@ namespace MinIDE
 //#####################################################################################################################
     ProjectImpl::ProjectImpl(GlobalPersistence* settings)
         : settings{settings}
-        , localPersistence{}
         , rootDir{}
         , files{}
         , directories{}

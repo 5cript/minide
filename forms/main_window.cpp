@@ -4,13 +4,18 @@
 #include "main_window/project_tree_renderer.hpp"
 #include "main_window/toolbar.hpp"
 
+// Project
+#include "../workspace/cmake_project.hpp"
+
 // Persistence Related
 #include "../workspace/workspace.hpp"
 #include "../global_settings/build_base_settings.hpp"
+#include "../workspace/project_file/cmake_build_profile.hpp"
 
 // Other GUIs
 #include "environment_options.hpp"
 #include "tool_options.hpp"
+#include "cmake_target_creator.hpp"
 
 // Widgets
 #include <nana/gui/msgbox.hpp>
@@ -29,6 +34,13 @@ using namespace std::string_literals;
 namespace MinIDE
 {
 //#####################################################################################################################
+    enum MenuEntries : std::size_t
+    {
+        File,
+        Project,
+        Settings
+    };
+//#####################################################################################################################
     struct MainWindowImpl
     {
         MainWindowImpl(GlobalPersistence* persistence);
@@ -42,6 +54,7 @@ namespace MinIDE
         nana::toolbar toolbar;
         Editor editor;
         LogTabs logTabs;
+        nana::combox activeProject;
         nana::combox targetSelector;
 
         // Layout
@@ -64,6 +77,7 @@ namespace MinIDE
         , toolbar{form}
         , editor{form}
         , logTabs{form}
+        , activeProject{form}
         , targetSelector{form}
         , layout{form}
         , theme{}
@@ -83,7 +97,6 @@ namespace MinIDE
         registerTreeEvents();
         populateToolbar();
         setupToolbarEvents();
-        refreshTargets();
     }
 //---------------------------------------------------------------------------------------------------------------------
     void MainWindow::populateToolbar()
@@ -100,6 +113,7 @@ namespace MinIDE
         layout.field("ProjectBox") << elements_->projectTree;
         layout.field("Toolbar") << elements_->toolbar;
         layout.field("TargetSelector") << elements_->targetSelector;
+        layout.field("ProjectSelector") << elements_->activeProject;
 
         layout.div(layoutString);
         layout.collocate();
@@ -119,8 +133,13 @@ namespace MinIDE
     void MainWindow::setupMenu()
     {
         auto& menu = elements_->menu;
+
         menu.push_back("File");
-        menu.at(0).append("Open Workspace", [this](nana::menu::item_proxy& ip)
+        menu.push_back("Project");
+        menu.push_back("Settings");
+
+
+        menu.at(File).append("Open Workspace", [this](nana::menu::item_proxy& ip)
         {
             nana::filebox fb(elements_->form, true);
             fb.add_filter("MinIDE Workspace", "*.midews");
@@ -128,9 +147,10 @@ namespace MinIDE
             {
                 elements_->workspace.loadWorkspace(fb.file());
                 reloadProjectTree();
+                refreshProjectSelector();
             }
         });
-        menu.at(0).append("Open Project", [this](nana::menu::item_proxy& ip)
+        menu.at(File).append("Open Project", [this](nana::menu::item_proxy& ip)
         {
             nana::filebox fb(elements_->form, true);
             fb.add_filter("CMakeLists", "CMakeLists.txt");
@@ -144,17 +164,30 @@ namespace MinIDE
                 auto item = elements_->projectTree.find("workspace/"s + project->name());
                 for (; !item.empty(); item = item.owner())
                     item.expand(true);
+                refreshProjectSelector();
             }
         });
 
-        menu.push_back("Settings");
-        menu.at(1).append("Environment Settings", [this](auto& item)
+        // Project
+        menu.at(Project).append("Add Build Target", [this](auto& item)
+        {
+            addTarget();
+        });
+        menu.at(Project).enabled(0, false);
+        menu.at(Project).append("Remove Build Target", [this](auto& item)
+        {
+            removeTarget();
+        });
+        menu.at(Project).enabled(1, false);
+
+        // Settings
+        menu.at(Settings).append("Environment Settings", [this](auto& item)
         {
             EnvironmentOptions envOpts{elements_->form, elements_->persistence};
             envOpts.show();
         });
 
-        menu.at(1).append("Tool Settings", [this](auto& item)
+        menu.at(Settings).append("Tool Settings", [this](auto& item)
         {
             ToolOptions toolOpts{elements_->form, elements_->persistence};
             toolOpts.show();
@@ -169,6 +202,95 @@ namespace MinIDE
                 elements_->editor.focusTextbox();
         });
         // WORKAROUND END
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void MainWindow::addTarget()
+    {
+        auto* project = elements_->workspace.projectByName(elements_->activeProject.caption());
+        if (!project)
+            return;
+
+        if (project->type() == "cmake")
+        {
+            CMakeTargetCreator targetCreator{elements_->form, elements_->persistence};
+            targetCreator.setup(
+                [this](){
+                    std::vector <std::string> envs;
+                    for (auto const& env : elements_->persistence->environments)
+                        envs.push_back(env.first);
+                    return envs;
+                }(),
+                [this](){
+                    std::vector <std::string> tools;
+                    for (auto const& tool : elements_->persistence->tooling)
+                        tools.push_back(tool.first);
+                    return tools;
+                }()
+            );
+            targetCreator.show();
+            if (targetCreator.clickedSave())
+            {
+                static_cast <CMakeProject*> (project)->addTarget(
+                    ProjectPersistence::CMakeBuildProfile{
+                        targetCreator.name(),
+                        targetCreator.outputPath(),
+                        targetCreator.environment(),
+                        targetCreator.tooling(),
+                        targetCreator.executableName(),
+                        targetCreator.isDebugable(),
+                        targetCreator.cmakeOptions()
+                    }
+                );
+                elements_->targetSelector.push_back(targetCreator.name());
+            }
+        }
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void MainWindow::removeTarget()
+    {
+        auto* project = elements_->workspace.projectByName(elements_->activeProject.caption());
+        if (!project)
+            return;
+
+        if (elements_->targetSelector.option() != nana::npos)
+        {
+            project->removeTarget(elements_->targetSelector.caption());
+            elements_->targetSelector.erase(elements_->targetSelector.option());
+            project->saveSettings();
+
+            if (!elements_->targetSelector.empty())
+                elements_->targetSelector.option(0);
+        }
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void MainWindow::refreshProjectSelector()
+    {
+        elements_->activeProject.clear();
+        for (auto const& i : *elements_->workspace.projects())
+            elements_->activeProject.push_back(i->name());
+
+        if (elements_->activeProject.the_number_of_options() > 0)
+        {
+            elements_->activeProject.option(0);
+            elements_->menu.at(Project).enabled(0, true);
+            elements_->menu.at(Project).enabled(1, true);
+        }
+        auto& toolbar = elements_->toolbar;
+        activate <ToolbarElement::CMake> (toolbar);
+        activate <ToolbarElement::Build> (toolbar);
+        activate <ToolbarElement::Run> (toolbar);
+        activate <ToolbarElement::BuildAndRun> (toolbar);
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void MainWindow::setActiveProject(std::string const& name)
+    {
+        auto* activeProject = elements_->workspace.projectByName(name);
+        elements_->targetSelector.clear();
+        for (auto&& target : activeProject->getBuildTargetNames())
+            elements_->targetSelector.push_back(target);
+
+        if (!elements_->targetSelector.empty())
+            elements_->targetSelector.option(0);
     }
 //---------------------------------------------------------------------------------------------------------------------
     void MainWindow::loadTheme(Theme const& theme)
@@ -255,21 +377,46 @@ namespace MinIDE
                 }
                 case ToolbarElement::CMake:
                 {
-                    activeProject->buildStep(0); // CMAKE
+                    if (promptTargetMissing())
+                        activeProject->buildStep(0, elements_->targetSelector.caption()); // CMAKE
                     break;
                 }
                 case ToolbarElement::Build:
                 {
-                    activeProject->buildStep(1); // MAKE
+                    if (promptTargetMissing())
+                        activeProject->buildStep(1, elements_->targetSelector.caption()); // MAKE
                     break;
                 }
                 case ToolbarElement::Run:
                 {
-                    activeProject->run(); // RUN
+                    if (promptTargetMissing())
+                        activeProject->run(elements_->targetSelector.caption()); // RUN
                     break;
                 }
             }
         });
+
+        elements_->targetSelector.events().selected([this](auto const& event)
+        {
+
+        });
+
+        elements_->activeProject.events().selected([this](auto const& event)
+        {
+            setActiveProject(event.widget.caption());
+        });
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    bool MainWindow::promptTargetMissing()
+    {
+        if (elements_->targetSelector.option() == nana::npos)
+        {
+            nana::msgbox box(elements_->form, "Select Target", nana::msgbox::ok);
+            box.icon(nana::msgbox::icon_error) << "You must select a build target first, maybe create one.";
+            box.show();
+            return false;
+        }
+        return true;
     }
 //---------------------------------------------------------------------------------------------------------------------
     MainWindow::~MainWindow() = default;

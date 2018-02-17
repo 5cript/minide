@@ -35,20 +35,38 @@ namespace MinIDE
         //_putenv(("PATH="s + environment_->path).c_str());
     }
 //---------------------------------------------------------------------------------------------------------------------
-    void CMakeProject::buildStep(int step)
+    std::string CMakeProject::type() const
+    {
+        return "cmake";
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    ProjectPersistence::CMakeBuildProfile* CMakeProject::getTarget(std::string const& target)
+    {
+        static_cast <ProjectPersistence::CMakeBuildProfile*> (Project::getTarget(target));
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void CMakeProject::addTarget(ProjectPersistence::CMakeBuildProfile const& target)
+    {
+        impl_->localFile.buildProfiles.push_back(
+            std::make_unique <ProjectPersistence::CMakeBuildProfile> (target)
+        );
+        saveProjectFiles();
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void CMakeProject::buildStep(int step, ProjectPersistence::CMakeBuildProfile* target)
     {
         switch (step)
         {
         case 0:
-            runCMake();
+            runCMake(target);
             break;
         case 1:
-            runMake();
+            runMake(target);
             break;
         }
     }
 //---------------------------------------------------------------------------------------------------------------------
-    void CMakeProject::runCMake()
+    void CMakeProject::runCMake(ProjectPersistence::CMakeBuildProfile* target)
     {
         /*
         auto dir = buildDir(debug);
@@ -67,7 +85,7 @@ namespace MinIDE
         */
     }
 //---------------------------------------------------------------------------------------------------------------------
-    void CMakeProject::runMake()
+    void CMakeProject::runMake(ProjectPersistence::CMakeBuildProfile* target)
     {
         /*
         auto dir = buildDir(debug);
@@ -85,7 +103,7 @@ namespace MinIDE
         */
     }
 //---------------------------------------------------------------------------------------------------------------------
-    path CMakeProject::buildDir() const
+    path CMakeProject::buildDir(ProjectPersistence::CMakeBuildProfile* target) const
     {
         /*
         auto dir = rootDir_;
@@ -98,7 +116,7 @@ namespace MinIDE
         */
     }
 //---------------------------------------------------------------------------------------------------------------------
-    void CMakeProject::run()
+    void CMakeProject::run(std::string const& target)
     {
         /*
         auto dir = buildDir(debug);
@@ -108,6 +126,11 @@ namespace MinIDE
             cb_
         );
         */
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void loadEnvironment(ProjectPersistence::CMakeBuildProfile* target)
+    {
+
     }
 //#####################################################################################################################
 }

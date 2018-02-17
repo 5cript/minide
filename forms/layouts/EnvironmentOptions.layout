@@ -1,0 +1,25 @@
+R"(
+<vertical
+	<ProfileChooserPane margin=5 max=35
+		<ProfileComboBox weight=70%><weight=5><<AddProfileButton><weight=5><RemoveProfileButton>>
+	>
+	<vertical margin=5
+		<vertical weight=60%
+			<PathLabel max=25>
+			<PathBox>
+		>|
+		<vertical
+			<EnvironmentVariables
+				<EnvironmentList>
+			>
+			<weight=5>
+			<ControlButtons max=25
+				<Empty1 weight=50%>
+				<AddEnv>
+				<Space2 weight=5>
+				<RemoveEnv>
+			>
+		>
+	>
+>
+)"

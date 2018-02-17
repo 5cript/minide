@@ -32,6 +32,15 @@ namespace MinIDE
         void populateToolbar();
         void setupToolbarEvents();
         void refreshTargets();
+        void refreshProjectSelector();
+        void setActiveProject(std::string const& name);
+        void addTarget();
+        void removeTarget();
+
+        /**
+         *  @return Continue?
+         */
+        bool promptTargetMissing();
 
     private:
         std::unique_ptr <MainWindowImpl> elements_;

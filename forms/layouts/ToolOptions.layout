@@ -1,0 +1,36 @@
+R"(
+<vertical
+	<ProfileChooserPane margin=5 max=35
+		<weight=75>
+		<ProfileComboBox weight=50%><weight=5><<AddProfileButton><weight=5><RemoveProfileButton>>
+	>
+	<
+		<weight=5>
+		<vertical margin=5
+			<max=25
+				<vertical max=70
+					<weight=3>
+					<CMakeLabel>
+				>
+				<CMakeBox>
+			>
+			<weight=5>
+			<max=25
+				<vertical max=70
+					<weight=3>
+					<MakeLabel>
+				>
+				<MakeBox>
+			>
+			<weight=5>
+			<max=25
+				<vertical max=70
+					<weight=3>
+					<ShellLabel>
+				>
+				<ShellBox>
+			>
+		>
+	>
+>
+)"

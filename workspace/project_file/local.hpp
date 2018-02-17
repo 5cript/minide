@@ -14,10 +14,6 @@ namespace MinIDE::ProjectPersistence
     {
         SERIALIZABLE;
 
-        boost::optional <std::string> lastEnvironment;
-        boost::optional <std::string> lastToolProfile;
-        boost::optional <std::string> lastExecutable;
-
         std::vector <std::unique_ptr <BuildProfile>> buildProfiles;
     };
 }
@@ -25,5 +21,5 @@ namespace MinIDE::ProjectPersistence
 BOOST_FUSION_ADAPT_STRUCT
 (
     MinIDE::ProjectPersistence::LocalPersistence,
-    lastEnvironment, lastToolProfile, lastExecutable
+    buildProfiles
 )

@@ -1,0 +1,72 @@
+R"(
+<vertical
+	<
+		<weight=5>
+		<vertical margin=5
+			<max=25
+				<vertical max=120
+					<weight=3>
+					<NameLabel>
+				>
+				<NameBox>
+			>
+			<weight=5>
+			<max=25
+				<vertical max=120
+					<weight=3>
+					<EnvLabel>
+				>
+				<EnvSelector>
+			>
+			<weight=5>
+			<max=25
+				<vertical max=120
+					<weight=3>
+					<ToolLabel>
+				>
+				<ToolSelector>
+			>
+			<weight=5>
+			<max=25
+				<vertical max=120
+					<weight=3>
+					<CMakeOptions>
+				>
+				<CMakeBox>
+			>
+			<weight=5>
+			<max=25
+				<vertical max=120
+					<weight=3>
+					<OutputPath>
+				>
+				<
+					<OutputBox>
+					<OutputBoxChooserBtn weight=25>
+				>
+			>
+			<weight=5>
+			<max=25
+				<vertical max=120
+					<weight=3>
+					<ExecLabel>
+				>
+				<ExecBox>
+			>
+			<weight=5>
+			<max=18
+				<vertical max=120>
+				<IsDebugableChecker>
+			>
+		>
+	>
+	<max=25
+		<weight=50%>
+		<Ok>
+		<weight=5>
+		<Cancel>
+		<weight=5>
+	>
+	<weight=5>
+>
+)"

@@ -1,0 +1,19 @@
+R"(
+<vertical 
+	<weight=25>
+	<weight=25
+		<Toolbar weight=150>
+		<Profiles
+			<ProjectSelector max=150>
+			<TargetSelector max=150>
+		>
+	> 
+	<
+		<weight=15% ProjectBox>|
+		<vertical 
+			<weight=70% Editor>|
+			<LogTabs>
+		>
+	>
+>
+)"

@@ -4,17 +4,27 @@
 
 namespace MinIDE::ProjectPersistence
 {
-    struct CmakeBuildProfile : BuildProfile
-                             , public JSON::Stringifiable <CmakeBuildProfile>
-                             , public JSON::Parsable <CmakeBuildProfile>
+    struct CMakeBuildProfile : BuildProfile
+                             , public JSON::Stringifiable <CMakeBuildProfile>
+                             , public JSON::Parsable <CMakeBuildProfile>
 
     {
-        boost::optional <std::string> CmakeOptions;
+        CMakeBuildProfile(
+            std::string name = "",
+            std::string outputPath = "",
+            std::string environment = "",
+            std::string toolProfile = "",
+            boost::optional <std::string> executable = boost::none,
+            bool isDebugable = false,
+            boost::optional <std::string> cmakeOptions = boost::none
+        );
+
+        boost::optional <std::string> cmakeOptions;
     };
 }
 
 BOOST_FUSION_ADAPT_STRUCT
 (
-    MinIDE::ProjectPersistence::CmakeBuildProfile,
-    CmakeOptions
+    MinIDE::ProjectPersistence::CMakeBuildProfile,
+    name, outputPath, executable, isDebugable, environment, toolProfile, cmakeOptions
 )

@@ -34,5 +34,5 @@
 # Other
 *.cbp
 *.depend
-*.layout
+/*.layout
 *build_log.html

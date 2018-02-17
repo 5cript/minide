@@ -25,8 +25,8 @@ namespace MinIDE
 
         if (filesystem::exists(projectFile))
             impl_->projectFile.load(projectFile);
-        if (filesystem::exists(projectFile))
-            impl_->projectFile.load(localFile);
+        if (filesystem::exists(localFile))
+            impl_->localFile.load(localFile);
     }
 //---------------------------------------------------------------------------------------------------------------------
     void Project::saveProjectFiles()
@@ -35,7 +35,40 @@ namespace MinIDE
         auto localFile = impl_->rootDir / ".minproj.local";
 
         impl_->projectFile.save(projectFile);
-        impl_->projectFile.save(localFile);
+        impl_->localFile.save(localFile);
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    std::vector <std::string> Project::getBuildTargetNames() const
+    {
+        std::vector <std::string> targets;
+        for (auto const& target : impl_->localFile.buildProfiles)
+            targets.push_back(target->name);
+
+        return targets;
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    ProjectPersistence::BuildProfile* Project::getTarget(std::string const& target)
+    {
+        auto& profiles = impl_->localFile.buildProfiles;
+        auto profile = std::find_if(std::begin(profiles), std::end(profiles), [&](auto const& profile){
+            return profile->name == target;
+        });
+        if (profile == std::end(profiles))
+            return nullptr;
+        else
+            return profile->get();
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void Project::removeTarget(std::string const& targetName)
+    {
+        auto& profiles = impl_->localFile.buildProfiles;
+        profiles.erase(std::remove_if(
+            std::begin(profiles),
+            std::end(profiles),
+            [&](auto const& profile){
+                return profile->name == targetName;
+            }
+        ), std::end(profiles));
     }
 //---------------------------------------------------------------------------------------------------------------------
     void Project::glob(
