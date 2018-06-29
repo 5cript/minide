@@ -49,6 +49,14 @@ R"(
 			<max=25
 				<vertical max=120
 					<weight=3>
+					<OutputRelativeLabel>
+				>
+				<OutputRelativeBox>
+			>
+			<weight=5>
+			<max=25
+				<vertical max=120
+					<weight=3>
 					<ExecLabel>
 				>
 				<ExecBox>

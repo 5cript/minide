@@ -30,6 +30,8 @@ namespace MinIDE
         nana::textbox execBox;
         nana::checkbox isDebugable;
         nana::label cmakeOptions;
+        nana::checkbox isRelativeOutput;
+        nana::label relativeOutputLabel;
         nana::textbox cmakeBox;
         nana::button okBtn;
         nana::button cancelBtn;
@@ -58,6 +60,8 @@ namespace MinIDE
         , execBox{form}
         , isDebugable{form, "Can attach debugger"}
         , cmakeOptions{form, "CMake Options: "}
+        , isRelativeOutput{form}
+        , relativeOutputLabel{form, "Output Path is relative to project: "}
         , cmakeBox{form}
         , okBtn{form, "Save"}
         , cancelBtn{form, "Cancel"}
@@ -109,6 +113,11 @@ namespace MinIDE
         return elements_->target.outputPath;
     }
 //---------------------------------------------------------------------------------------------------------------------
+    bool CMakeTargetCreator::outputIsRelative() const
+    {
+        return elements_->target.outputIsRelative;
+    }
+//---------------------------------------------------------------------------------------------------------------------
     boost::optional <std::string> CMakeTargetCreator::executableName() const
     {
         return elements_->target.executable;
@@ -149,6 +158,7 @@ namespace MinIDE
         target.outputPath = elements_->outputPath.caption();
         target.environment = elements_->envSelector.caption();
         target.toolProfile = elements_->toolSelector.caption();
+        target.outputIsRelative = elements_->isRelativeOutput.checked();
 
         if (!elements_->execBox.empty())
             target.executable = elements_->execBox.caption();
@@ -185,6 +195,8 @@ namespace MinIDE
         layout.field("ToolSelector") << elements_->toolSelector;
         layout.field("OutputPath") << elements_->outputLabel;
         layout.field("OutputBox") << elements_->outputPath;
+        layout.field("OutputRelativeLabel") << elements_->relativeOutputLabel;
+        layout.field("OutputRelativeBox") << elements_->isRelativeOutput;
         layout.field("ExecLabel") << elements_->execLabel;
         layout.field("ExecBox") << elements_->execBox;
         layout.field("CMakeOptions") << elements_->cmakeOptions;

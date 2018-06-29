@@ -8,6 +8,15 @@ namespace MinIDE
 {
     class EditableListElement : public nana::listbox::inline_notifier_interface
     {
+    public:
+        EditableListElement(bool* dirty)
+            : indicator_{nullptr}
+            , pos_{}
+            , txt_{}
+            , dirty_{dirty}
+            , fresh_{false}
+        {}
+
     private:
         //Creates inline widget
         //listbox calls this method to create the widget
@@ -28,14 +37,13 @@ namespace MinIDE
                 indicator_->hovered(pos_);
             });
 
-            txt_.events().key_char([this](const auto& arg)
+            txt_.events().text_changed([this](const auto& arg)
             {
-                if (arg.key == nana::keyboard::enter)
-                {
-                    //Modify the item when enter is pressed
-                    arg.ignore = true;
-                    indicator_->modify(pos_, txt_.caption());
-                }
+                std::cout << txt_.caption() << "\n";
+                indicator_->modify(pos_, txt_.caption());
+                if (!fresh_)
+                    *dirty_ = true;
+                fresh_ = false;
             });
 
             txt_.borderless(true);
@@ -84,7 +92,12 @@ namespace MinIDE
         //Sets the value of inline widget with the value of the sub item
         void set(const value_type& value) override
         {
+            if (txt_.caption() == value)
+                return;
+            fresh_ = true;
+            auto caret = txt_.caret_pos();
             txt_.caption(value);
+            txt_.caret_pos(caret);
         }
 
         //Determines whether to draw the value of sub item
@@ -96,8 +109,10 @@ namespace MinIDE
         }
 
     private:
-        inline_indicator * indicator_{ nullptr };
-        index_type  pos_;
-        nana::textbox     txt_;
+        inline_indicator* indicator_;
+        index_type pos_;
+        nana::textbox txt_;
+        bool* dirty_;
+        bool fresh_;
     };
 }

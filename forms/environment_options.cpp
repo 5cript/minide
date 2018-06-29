@@ -144,11 +144,12 @@ namespace MinIDE
         elements_->addEnvironmentVar.events().click([this](auto const& event)
         {
             elements_->envVars.at(0).append({"ENTER_KEY", "ENTER_VALUE"});
+            elements_->dirty = true;
         });
 
         elements_->removeEnvironmentVar.events().click([this](auto const& event)
         {
-
+            elements_->dirty = true;
         });
 
         elements_->form.events().unload([this](auto const& event)
@@ -220,6 +221,16 @@ namespace MinIDE
             {
                 auto& environment = elements_->settings->environments[elements_->lastSelectedProfile];
                 environment.path = formatPath(elements_->pathBox.caption(), true);
+
+                auto envVarCount = elements_->envVars.size_item(0);
+                std::unordered_map <std::string, std::string> vars;
+                for (decltype(envVarCount) i = decltype(envVarCount){}; i != envVarCount; ++i)
+                {
+                    std::cout << elements_->envVars.at(0).at(i).text(0) << "=" << elements_->envVars.at(0).at(i).text(1) << "\n";
+                    vars[elements_->envVars.at(0).at(i).text(0)] = elements_->envVars.at(0).at(i).text(1);
+                }
+                environment.variables = vars;
+
                 elements_->settings->save();
             }
             elements_->dirty = false;
@@ -246,20 +257,19 @@ namespace MinIDE
     std::string EnvironmentOptions::formatPath(std::string const& path, bool toMachine)
     {
         std::string result;
-        if (!toMachine)
+        if (!toMachine) // for human
         {
             for (auto const i : path)
             {
                 if (i == ';')
                 {
-                    result.push_back(';');
                     result.push_back('\n');
                 }
                 else
                     result.push_back(i);
             }
         }
-        else
+        else // for machine
         {
             bool trimEnabled = false;
             for (auto const i : path)
@@ -269,11 +279,15 @@ namespace MinIDE
                     if (std::isspace(i))
                         continue;
                     else
+                    {
+                        result.push_back(';');
                         trimEnabled = false;
+                    }
                 }
-                if (i == ';')
+                if (i == '\n')
                     trimEnabled = true;
-                result.push_back(i);
+                else
+                    result.push_back(i);
             }
         }
         return result;
@@ -284,8 +298,8 @@ namespace MinIDE
         elements_->envVars.append_header("Variable", 90);
         elements_->envVars.append_header("Value", 480);
 
-        elements_->envVars.at(0).inline_factory(0, nana::pat::make_factory<EditableListElement>());
-        elements_->envVars.at(0).inline_factory(1, nana::pat::make_factory<EditableListElement>());
+        elements_->envVars.at(0).inline_factory(0, nana::pat::make_factory<EditableListElement>(&elements_->dirty));
+        elements_->envVars.at(0).inline_factory(1, nana::pat::make_factory<EditableListElement>(&elements_->dirty));
     }
 //---------------------------------------------------------------------------------------------------------------------
     EnvironmentOptions::~EnvironmentOptions() = default;

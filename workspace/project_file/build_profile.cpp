@@ -6,6 +6,7 @@ namespace MinIDE::ProjectPersistence
     BuildProfile::BuildProfile(
         std::string name,
         std::string outputPath,
+        bool outputIsRelative,
         std::string environment,
         std::string toolProfile,
         boost::optional <std::string> executable,
@@ -13,6 +14,7 @@ namespace MinIDE::ProjectPersistence
     )
         : name{name}
         , outputPath{outputPath}
+        , outputIsRelative{outputIsRelative}
         , environment{environment}
         , toolProfile{toolProfile}
         , executable{executable}

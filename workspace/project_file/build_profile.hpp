@@ -13,6 +13,7 @@ namespace MinIDE::ProjectPersistence
         BuildProfile(
             std::string name = "",
             std::string outputPath = "",
+            bool outputIsRelative = true,
             std::string environment = "",
             std::string toolProfile = "",
             boost::optional <std::string> executable = boost::none,
@@ -21,6 +22,7 @@ namespace MinIDE::ProjectPersistence
 
         std::string name;
         std::string outputPath;
+        bool outputIsRelative;
         std::string environment;
         std::string toolProfile;
         boost::optional <std::string> executable;
@@ -31,5 +33,5 @@ namespace MinIDE::ProjectPersistence
 BOOST_FUSION_ADAPT_STRUCT
 (
     MinIDE::ProjectPersistence::BuildProfile,
-    name, outputPath, executable, isDebugable, environment, toolProfile
+    name, outputPath, outputIsRelative, executable, isDebugable, environment, toolProfile
 )

@@ -234,6 +234,7 @@ namespace MinIDE
                     ProjectPersistence::CMakeBuildProfile{
                         targetCreator.name(),
                         targetCreator.outputPath(),
+                        targetCreator.outputIsRelative(),
                         targetCreator.environment(),
                         targetCreator.tooling(),
                         targetCreator.executableName(),

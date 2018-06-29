@@ -9,22 +9,35 @@ namespace MinIDE::ProjectPersistence
                              , public JSON::Parsable <CMakeBuildProfile>
 
     {
+        /**
+         *  @param name = The name of the profile (e.g. "Debug").
+         *  @param outputPath = The path to build stuff in(, where the lib/executable will reside in, depends on cmake)
+         *  @param outputIsRelative = The outputPath is relative to the project root.
+         *  @param environment = The environment settings to use.
+         *  @param toolProfile = what tooling to use.
+         *  @param executable = What is the executable be called after build (optional, might be library and not runnable).
+         *  @param isDebugable = Can this target be debugged?
+         *  @param cmakeOptions = Additional cmake options related to this project.
+         */
         CMakeBuildProfile(
             std::string name = "",
             std::string outputPath = "",
+            bool outputIsRelative = true,
             std::string environment = "",
             std::string toolProfile = "",
             boost::optional <std::string> executable = boost::none,
             bool isDebugable = false,
-            boost::optional <std::string> cmakeOptions = boost::none
+            boost::optional <std::string> cmakeOptions = boost::none,
+            boost::optional <std::string> makeOptions = boost::none
         );
 
         boost::optional <std::string> cmakeOptions;
+        boost::optional <std::string> makeOptions;
     };
 }
 
 BOOST_FUSION_ADAPT_STRUCT
 (
     MinIDE::ProjectPersistence::CMakeBuildProfile,
-    name, outputPath, executable, isDebugable, environment, toolProfile, cmakeOptions
+    name, outputPath, outputIsRelative, executable, isDebugable, environment, toolProfile, cmakeOptions, makeOptions
 )

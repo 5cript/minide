@@ -97,6 +97,16 @@ namespace MinIDE
         return impl_->rootDir;
     }
 //---------------------------------------------------------------------------------------------------------------------
+    GlobalPersistence* Project::getSettings()
+    {
+        return impl_->settings;
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    std::function <void(std::string const&)> const& Project::callback()
+    {
+        return impl_->cb;
+    }
+//---------------------------------------------------------------------------------------------------------------------
     std::string Project::name() const
     {
         return impl_->rootDir.filename().string();

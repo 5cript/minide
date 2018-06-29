@@ -42,7 +42,7 @@ namespace MinIDE
 //---------------------------------------------------------------------------------------------------------------------
     ProjectPersistence::CMakeBuildProfile* CMakeProject::getTarget(std::string const& target)
     {
-        static_cast <ProjectPersistence::CMakeBuildProfile*> (Project::getTarget(target));
+        return static_cast <ProjectPersistence::CMakeBuildProfile*> (Project::getTarget(target));
     }
 //---------------------------------------------------------------------------------------------------------------------
     void CMakeProject::addTarget(ProjectPersistence::CMakeBuildProfile const& target)
@@ -53,79 +53,104 @@ namespace MinIDE
         saveProjectFiles();
     }
 //---------------------------------------------------------------------------------------------------------------------
-    void CMakeProject::buildStep(int step, ProjectPersistence::CMakeBuildProfile* target)
+    void CMakeProject::buildStep(int step, std::string const& target)
     {
+        auto* targ = getTarget(target);
+        if (targ == nullptr)
+            throw std::invalid_argument("Such a target does not exist.");
+
         switch (step)
         {
         case 0:
-            runCMake(target);
+            runCMake(targ);
             break;
         case 1:
-            runMake(target);
+            runMake(targ);
             break;
         }
     }
 //---------------------------------------------------------------------------------------------------------------------
-    void CMakeProject::runCMake(ProjectPersistence::CMakeBuildProfile* target)
+    void CMakeProject::runExternal(std::string const& command, ProjectPersistence::CMakeBuildProfile* target)
     {
-        /*
-        auto dir = buildDir(debug);
+        auto* settings = getSettings();
+
+        // find environment
+        auto environment_iter = settings->environments.find(target->environment);
+        if (environment_iter == std::end(settings->environments))
+            throw std::runtime_error("the local project asked for an environment setting that does not exist on this computer");
+
+        // set environment
+        std::unordered_map <std::string, std::string> env;
+        env["PATH"] = environment_iter->second.path;
+        env.insert(std::begin(environment_iter->second.variables), std::end(environment_iter->second.variables));
+
+        // set other variables
+        auto buildDirectory = buildDir(target);
+        if (target->outputIsRelative)
+            buildDirectory = rootDir() / buildDir(target);
 
         process_ = std::make_unique <AsyncProcess> (
-            settings_->toolDirectory
-                + "/"
-                + settings_->cmakeCommand
-                + " \""s
-                + rootDir_.string()
-                + "\" "
-                + settings_->cmakeProjectSettings.cmakeParameters
-            , dir.string()
-            , cb_
+            command,
+            buildDirectory.string(),
+            env,
+            callback()
         );
-        */
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void CMakeProject::runCMake(ProjectPersistence::CMakeBuildProfile* target)
+    {
+        auto* settings = getSettings();
+
+        // find toolbox
+        auto tooling_iter = settings->tooling.find(target->toolProfile);
+        if (tooling_iter == std::end(settings->tooling))
+            throw std::runtime_error("the local project asked for a tooling profile that does not exist on this computer");
+        auto cmake = tooling_iter->second.cmake;
+
+        std::string options;
+        if (target->cmakeOptions)
+            options = target->cmakeOptions.get();
+
+        runExternal(
+            cmake + " \"" + rootDir().string() + "\" " + options,
+            target
+        );
     }
 //---------------------------------------------------------------------------------------------------------------------
     void CMakeProject::runMake(ProjectPersistence::CMakeBuildProfile* target)
     {
-        /*
-        auto dir = buildDir(debug);
+        auto* settings = getSettings();
 
-        process_ = std::make_unique <AsyncProcess> (
-            settings_->toolDirectory
-                + "/"
-                + settings_->makeCommand
-                + " -C \""s
-                + dir.string()
-                + "\""
-            , dir.string()
-            , cb_
-        );
-        */
+        // find toolbox
+        auto tooling_iter = settings->tooling.find(target->toolProfile);
+        if (tooling_iter == std::end(settings->tooling))
+            throw std::runtime_error("the local project asked for a tooling profile that does not exist on this computer");
+        auto make = tooling_iter->second.make;
+
+        std::string options;
+        if (target->makeOptions)
+            options = target->makeOptions.get();
+
+        runExternal(make + " " + options, target);
     }
 //---------------------------------------------------------------------------------------------------------------------
     path CMakeProject::buildDir(ProjectPersistence::CMakeBuildProfile* target) const
     {
-        /*
-        auto dir = rootDir_;
-        if (debug)
-            dir /= settings_->cmakeProjectSettings.debugOutputDir;
-        else
-            dir /= settings_->cmakeProjectSettings.releaseOutputDir;
-        filesystem::create_directory(dir);
-        return dir;
-        */
+        return target->outputPath;
     }
 //---------------------------------------------------------------------------------------------------------------------
     void CMakeProject::run(std::string const& target)
     {
-        /*
-        auto dir = buildDir(debug);
-        process_ = std::make_unique <AsyncProcess> (
-            (dir / "faky.exe").string(),
-            dir.string(),
-            cb_
-        );
-        */
+        auto* targ = getTarget(target);
+
+        auto buildDirectory = buildDir(targ);
+        if (targ->outputIsRelative)
+            buildDirectory = rootDir() / buildDir(targ);
+
+        if (targ->executable)
+            runExternal((buildDirectory / targ->executable.get()).string(), targ);
+        else
+            callback()("target lacks executable name parameter");
     }
 //---------------------------------------------------------------------------------------------------------------------
     void loadEnvironment(ProjectPersistence::CMakeBuildProfile* target)

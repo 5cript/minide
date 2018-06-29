@@ -7,6 +7,6 @@
 
 namespace MinIDE
 {
-    std::vector <std::string> getEnvironmentVariables();
-    void setEnvironment(Environment const& environment);
+    //std::vector <std::string> getEnvironmentVariables();
+    //void setEnvironment(Environment const& environment);
 }

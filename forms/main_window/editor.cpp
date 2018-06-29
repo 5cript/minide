@@ -56,8 +56,8 @@ namespace MinIDE
 
             for (auto & pos : text_pos)
             {
-                auto line_num = std::to_wstring(pos.y + 1);
-                auto pixels = graph.text_extent_size(line_num).width;
+                auto line_num = std::to_string(pos.y + 1);
+                auto pixels = graph.text_extent_size(std::string_view{line_num}).width;
 
                 //Check if the panel widget is not enough room to display a line number
                 if (pixels + 5 > graph.width())
@@ -106,7 +106,7 @@ namespace MinIDE
 
         applyCppScheme(elements_->textbox);
     }
-//---------------------------------------------------------------------------------------------------------------------
+//-------------------------------text_extent_size--------------------------------------------------------------------------------------
     void Editor::save()
     {
         elements_->fileStore.selected().data(elements_->textbox.caption());

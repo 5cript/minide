@@ -35,6 +35,7 @@ namespace MinIDE
         std::string environment() const;
         std::string tooling() const;
         std::string outputPath() const;
+        bool outputIsRelative() const;
         boost::optional <std::string> executableName() const;
         boost::optional <std::string> cmakeOptions() const;
         bool isDebugable() const;
