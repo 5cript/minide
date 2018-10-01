@@ -1,0 +1,11 @@
+R"(
+<vertical
+	<ProfileChooserPane margin=5 max=35
+		<ProfileComboBox weight=50%><weight=5><<AddProfileButton><weight=5><RemoveProfileButton>>
+	>
+	<TabBar max=25
+	>
+	<weight=5>
+	<ChildFrames margin=5>
+>
+)"

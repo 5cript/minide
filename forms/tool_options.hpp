@@ -12,7 +12,7 @@ namespace MinIDE
     {
     public:
         constexpr static const char* layoutString =
-            #include "layouts/ToolOptions.layout"
+            #include "layouts/tool_options.layout"
         ;
 
     public:

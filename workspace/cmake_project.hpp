@@ -9,6 +9,8 @@
 
 namespace MinIDE
 {
+    struct CMakeProjectImpl;
+
     class CMakeProject : public Project
     {
     public:
@@ -21,6 +23,8 @@ namespace MinIDE
          *  @param rootDir The root dir of the projects which contains the CMakeLists.txt
          */
         CMakeProject(GlobalPersistence* settings, path const& rootDir);
+
+        ~CMakeProject();
 
         /**
          *  Load a project from a directory (which is equivallent of setting the root dir containing the cmake file).
@@ -38,6 +42,16 @@ namespace MinIDE
          *  Run the output (depends on cmake file, might need parsing or setting).
          */
         void run(std::string const& target) override;
+
+        /**
+         *  Run the program with debugger attached.
+         */
+        void runDebug(std::string const& target) override;
+
+        /**
+         *  Kill whatever process is currently running.
+         */
+        void killProcess() override;
 
         /**
          *  Retrieve the project type as a string "cmake".
@@ -62,6 +76,6 @@ namespace MinIDE
         void loadEnvironment(ProjectPersistence::CMakeBuildProfile* target);
 
     private:
-        std::unique_ptr <AsyncProcess> process_;
+        std::unique_ptr <CMakeProjectImpl> cmakeImpl_;
     };
 }

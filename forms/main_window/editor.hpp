@@ -36,6 +36,7 @@ namespace MinIDE
         void tabSynchronize();
         void registerTabEvents();
         void registerEditorEvents();
+        void registerNumberPaneEvents();
         void setText(std::string const& text);
         void setEditorEnabled(bool enabled);
         void setHighlighting(Highlighting const& highlight);

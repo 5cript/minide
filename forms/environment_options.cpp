@@ -18,7 +18,12 @@ namespace MinIDE
 //#####################################################################################################################
     struct EnvironmentOptionsImpl
     {
-        EnvironmentOptionsImpl(nana::window owner, GlobalPersistence* settings);
+        EnvironmentOptionsImpl(
+            nana::window owner,
+            std::unordered_map <std::string, Environment>* environments,
+            std::function <void()> saveFunction,
+            bool noProfiles
+        );
 
         // Form
         nana::form form;
@@ -37,14 +42,21 @@ namespace MinIDE
         nana::place layout;
 
         // Persistence Related
-        GlobalPersistence* settings;
+        std::unordered_map <std::string, Environment>* environments;
+        std::function <void()> saveFunction;
 
         // Other
         std::string lastSelectedProfile;
         bool dirty; // dirty = some changes were made
+        bool noProfiles;
     };
 //---------------------------------------------------------------------------------------------------------------------
-    EnvironmentOptionsImpl::EnvironmentOptionsImpl(nana::window owner, GlobalPersistence* settings)
+    EnvironmentOptionsImpl::EnvironmentOptionsImpl(
+        nana::window owner,
+        std::unordered_map <std::string, Environment>* environments,
+        std::function <void()> saveFunction,
+        bool noProfiles
+    )
         : form{owner, nana::API::make_center(owner, 600, 400)}
         , envVars{form}
         , addProfile{form, "Add Profile"}
@@ -55,14 +67,21 @@ namespace MinIDE
         , pathLabel{form, "Path"}
         , pathBox{form}
         , layout{form}
-        , settings{settings}
+        , environments{environments}
+        , saveFunction{saveFunction}
         , lastSelectedProfile{""}
         , dirty{false}
+        , noProfiles{noProfiles}
     {
     }
 //#####################################################################################################################
-    EnvironmentOptions::EnvironmentOptions(nana::window owner, GlobalPersistence* settings)
-        : elements_{new EnvironmentOptionsImpl(owner, settings)}
+    EnvironmentOptions::EnvironmentOptions(
+        nana::window owner,
+        std::unordered_map <std::string, Environment>* environments,
+        std::function <void()> saveFunction,
+        bool noProfiles
+    )
+        : elements_{new EnvironmentOptionsImpl(owner, environments, saveFunction, noProfiles)}
     {
         setupEnvironmentListbox();
         setupLayout();
@@ -72,8 +91,7 @@ namespace MinIDE
 //---------------------------------------------------------------------------------------------------------------------
     void EnvironmentOptions::loadEnvironments()
     {
-        GlobalPersistence* settings = elements_->settings;
-        for (auto const& i : settings->environments)
+        for (auto const& i : *elements_->environments)
             elements_->profileSelector.push_back(i.first);
 
         disableAllOrSelect();
@@ -96,8 +114,8 @@ namespace MinIDE
             {
                 //std::cout << text.value() << "\n";
 
-                auto env = elements_->settings->environments.find(text.value());
-                if (env != std::end(elements_->settings->environments))
+                auto env = elements_->environments->find(text.value());
+                if (env != std::end(*elements_->environments))
                 {
                     nana::msgbox box(elements_->form, "Already exists", nana::msgbox::ok);
                     box.icon(nana::msgbox::icon_error) << "The environment profile already exists.";
@@ -106,8 +124,8 @@ namespace MinIDE
                 }
                 else if (!useWizard.value())
                 {
-                    elements_->settings->environments[text.value()] = {};
-                    elements_->settings->environments[text.value()].name = text.value();
+                    (*elements_->environments)[text.value()] = {};
+                    (*elements_->environments)[text.value()].name = text.value();
 
                     elements_->profileSelector.push_back(text.value());
                     elements_->profileSelector.option(elements_->profileSelector.the_number_of_options() - 1);
@@ -130,14 +148,14 @@ namespace MinIDE
             auto result = box.show();
             if (result == nana::msgbox::pick_yes)
             {
-                auto prof = elements_->settings->environments.find(elements_->lastSelectedProfile);
-                if (prof != std::end(elements_->settings->environments))
+                auto prof = elements_->environments->find(elements_->lastSelectedProfile);
+                if (prof != std::end(*elements_->environments))
                 {
-                    elements_->settings->environments.erase(prof);
+                    elements_->environments->erase(prof);
                 }
                 elements_->profileSelector.erase(elements_->profileSelector.option());
                 disableAllOrSelect();
-                elements_->settings->save();
+                elements_->saveFunction();
             }
         });
 
@@ -199,7 +217,7 @@ namespace MinIDE
 //---------------------------------------------------------------------------------------------------------------------
     void EnvironmentOptions::loadProfile()
     {
-        auto& environment = elements_->settings->environments[elements_->lastSelectedProfile];
+        auto& environment = (*elements_->environments)[elements_->lastSelectedProfile];
         elements_->pathBox.caption(formatPath(environment.path, false));
 
         elements_->envVars.clear();
@@ -219,7 +237,7 @@ namespace MinIDE
             auto result = box.show();
             if (result == nana::msgbox::pick_yes)
             {
-                auto& environment = elements_->settings->environments[elements_->lastSelectedProfile];
+                auto& environment = (*elements_->environments)[elements_->lastSelectedProfile];
                 environment.path = formatPath(elements_->pathBox.caption(), true);
 
                 auto envVarCount = elements_->envVars.size_item(0);
@@ -231,7 +249,7 @@ namespace MinIDE
                 }
                 environment.variables = vars;
 
-                elements_->settings->save();
+                elements_->saveFunction();
             }
             elements_->dirty = false;
         }
@@ -243,14 +261,16 @@ namespace MinIDE
 
         layout.field("ProfileComboBox") << elements_->profileSelector;
         layout.field("AddProfileButton") << elements_->addProfile;
+        layout.field("RemoveProfileButton") << elements_->removeProfile;
         layout.field("EnvironmentList") << elements_->envVars;
         layout.field("AddEnv") << elements_->addEnvironmentVar;
         layout.field("RemoveEnv") << elements_->removeEnvironmentVar;
-        layout.field("RemoveProfileButton") << elements_->removeProfile;
         layout.field("PathLabel") << elements_->pathLabel;
         layout.field("PathBox") << elements_->pathBox;
 
         layout.div(layoutString);
+        if (elements_->noProfiles)
+            layout.field_display("ProfileChooserPane", false);
         layout.collocate();
     }
 //---------------------------------------------------------------------------------------------------------------------

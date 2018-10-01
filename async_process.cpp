@@ -20,14 +20,18 @@ namespace MinIDE
         std::string const& command,
         std::string const& directory,
         std::unordered_map <std::string, std::string> const& environment,
-        std::function <void(std::string const&)> cb
+        std::function <void(std::string const&)> consoleOutCb,
+        std::function <void(int exitCode)> processEndedCb
     )
-        : cb_{std::move(cb)}
+        : thread_{}
+        , process_{}
+        , consoleOutCb_{std::move(consoleOutCb)}
+        , processEndedCb_{std::move(processEndedCb)}
     {
         thread_ = std::thread([this, command, directory, environment]()
         {
             std::cout << command << "\n";
-            cb_(command + "\n");
+            consoleOutCb_(command + "\n");
 
             process_ = std::make_unique <TinyProcessLib::Process> (
                 command,
@@ -36,29 +40,36 @@ namespace MinIDE
                 [this](char const* bytes, std::size_t count)
                 {
                     auto str = std::string{bytes, count};
-                    cb_(str);
+                    consoleOutCb_(str);
                     std::cout << str;
                 },
                 [this](char const* bytes, std::size_t count)
                 {
                     auto str = std::string{bytes, count};
-                    cb_(str);
+                    consoleOutCb_(str);
                     std::cerr << str;
                 },
                 true
             );
 
-            auto exitStatus_ = process_->get_exit_status();
-            auto exitMessage = "Process exited with status "s + std::to_string(exitStatus_) + " (hex 0x" + (boost::format("%x") % exitStatus_).str() + ")\n";
+            auto exitStatus = process_->get_exit_status();
+            auto exitMessage = "Process exited with status "s + std::to_string(exitStatus) + " (hex 0x" + (boost::format("%x") % exitStatus).str() + ")\n";
             #ifdef _WIN32
-            if (exitStatus_ == -1)
+            if (exitStatus == -1)
             {
                 exitMessage += "System error: " + std::to_string(GetLastError()) + "\n";
             }
             #endif
-            cb_(exitMessage);
+            consoleOutCb_(exitMessage);
+            processEndedCb_(exitStatus);
             std::cout << exitMessage << "\n";
         });
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void AsyncProcess::kill()
+    {
+        if (thread_.joinable() && process_)
+            process_->kill(true);
     }
 //---------------------------------------------------------------------------------------------------------------------
     AsyncProcess::~AsyncProcess()

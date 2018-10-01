@@ -16,6 +16,7 @@
 #include "environment_options.hpp"
 #include "tool_options.hpp"
 #include "cmake_target_creator.hpp"
+#include "debugger_options.hpp"
 
 // Widgets
 #include <nana/gui/msgbox.hpp>
@@ -174,16 +175,28 @@ namespace MinIDE
             addTarget();
         });
         menu.at(Project).enabled(0, false);
+        menu.at(Project).append("Edit Current Target", [this](auto& item)
+        {
+            editTarget();
+        });
+        menu.at(Project).enabled(1, false);
         menu.at(Project).append("Remove Build Target", [this](auto& item)
         {
             removeTarget();
         });
-        menu.at(Project).enabled(1, false);
+        menu.at(Project).enabled(2, false);
 
         // Settings
         menu.at(Settings).append("Environment Settings", [this](auto& item)
         {
-            EnvironmentOptions envOpts{elements_->form, elements_->persistence};
+            EnvironmentOptions envOpts{
+                elements_->form,
+                &elements_->persistence->environments,
+                [this]()
+                {
+                    elements_->persistence->save();
+                }
+            };
             envOpts.show();
         });
 
@@ -191,6 +204,19 @@ namespace MinIDE
         {
             ToolOptions toolOpts{elements_->form, elements_->persistence};
             toolOpts.show();
+        });
+
+        menu.at(Settings).append("Debugger Settings", [this](auto& item)
+        {
+            DebuggerOptions debuggerOpts{
+                elements_->form,
+                &elements_->persistence->debugger,
+                [this]()
+                {
+                    elements_->persistence->save();
+                }
+            };
+            debuggerOpts.show();
         });
 
         // WORKAROUND - Alt Gr is not focusing the menu anymore
@@ -239,10 +265,64 @@ namespace MinIDE
                         targetCreator.tooling(),
                         targetCreator.executableName(),
                         targetCreator.isDebugable(),
+                        std::nullopt,
                         targetCreator.cmakeOptions()
                     }
                 );
                 elements_->targetSelector.push_back(targetCreator.name());
+            }
+        }
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void MainWindow::editTarget()
+    {
+        auto* project = elements_->workspace.projectByName(elements_->activeProject.caption());
+        if (!project)
+            return;
+
+        if (project->type() == "cmake")
+        {
+            if (elements_->targetSelector.caption().empty())
+                return;
+
+            auto* target = static_cast <CMakeProject*> (project)->getTarget(elements_->targetSelector.caption());
+            CMakeTargetCreator targetCreator{elements_->form, elements_->persistence};
+            targetCreator.setup(
+                [this](){
+                    std::vector <std::string> envs;
+                    for (auto const& env : elements_->persistence->environments)
+                        envs.push_back(env.first);
+                    return envs;
+                }(),
+                [this](){
+                    std::vector <std::string> tools;
+                    for (auto const& tool : elements_->persistence->tooling)
+                        tools.push_back(tool.first);
+                    return tools;
+                }(),
+                target
+            );
+            targetCreator.show();
+            if (targetCreator.clickedSave())
+            {
+                *target = ProjectPersistence::CMakeBuildProfile{
+                    targetCreator.name(),
+                    targetCreator.outputPath(),
+                    targetCreator.outputIsRelative(),
+                    targetCreator.environment(),
+                    targetCreator.tooling(),
+                    targetCreator.executableName(),
+                    targetCreator.isDebugable(),
+                    std::nullopt,
+                    targetCreator.cmakeOptions(),
+                    targetCreator.makeOptions()
+                };
+                if (targetCreator.originalName() != targetCreator.name())
+                {
+                    elements_->targetSelector.erase(elements_->targetSelector.option());
+                    elements_->targetSelector.push_back(targetCreator.name());
+                    elements_->targetSelector.option(elements_->targetSelector.the_number_of_options() - 1);
+                }
             }
         }
     }
@@ -275,12 +355,12 @@ namespace MinIDE
             elements_->activeProject.option(0);
             elements_->menu.at(Project).enabled(0, true);
             elements_->menu.at(Project).enabled(1, true);
+            elements_->menu.at(Project).enabled(2, true);
         }
         auto& toolbar = elements_->toolbar;
         activate <ToolbarElement::CMake> (toolbar);
         activate <ToolbarElement::Build> (toolbar);
         activate <ToolbarElement::Run> (toolbar);
-        activate <ToolbarElement::BuildAndRun> (toolbar);
     }
 //---------------------------------------------------------------------------------------------------------------------
     void MainWindow::setActiveProject(std::string const& name)
@@ -307,7 +387,7 @@ namespace MinIDE
 //---------------------------------------------------------------------------------------------------------------------
     void MainWindow::reloadProjectTree()
     {
-        elements_->projectTree.insert("workspace", "Workspace").icon("resources/house.png");
+        elements_->projectTree.insert("workspace", "Workspace").icon("resources/images/house.png");
         for (auto const& project : *elements_->workspace.projects())
         {
             elements_->projectTree.insert("workspace/"s + project->name(), project->name());
@@ -351,16 +431,41 @@ namespace MinIDE
             if (!activeProject)
                 return;
 
+            auto deactivateButtons = [&]()
+            {
+                deactivate <ToolbarElement::Build>(elements_->toolbar);
+                deactivate <ToolbarElement::BuildAndRun>(elements_->toolbar);
+                deactivate <ToolbarElement::Run>(elements_->toolbar);
+                deactivate <ToolbarElement::CMake>(elements_->toolbar);
+                activate <ToolbarElement::Cancel>(elements_->toolbar);
+            };
+
+            auto activateButtons = [&]()
+            {
+                activate <ToolbarElement::Build>(elements_->toolbar);
+                activate <ToolbarElement::BuildAndRun>(elements_->toolbar);
+                activate <ToolbarElement::Run>(elements_->toolbar);
+                activate <ToolbarElement::CMake>(elements_->toolbar);
+                deactivate <ToolbarElement::Cancel>(elements_->toolbar);
+            };
+
             switch (static_cast <ToolbarElement> (event.button))
             {
                 default: break;
                 case ToolbarElement::CMake:
                 case ToolbarElement::Build:
                 case ToolbarElement::Run:
-                    activeProject->setProcessOutputCallback([this](std::string const& str){
-                        elements_->logTabs.addText(str);
-                    });
                     elements_->logTabs.clear();
+                    activeProject->registerCallback(ProjectEvents::ProcessOutput, "big_process_output",
+                        [this](std::string const& str) {
+                            elements_->logTabs.addText(str);
+                        }
+                    );
+                    activeProject->registerCallback(ProjectEvents::ProcessExited, "big_process_exit",
+                        [activateButtons](int const&) {
+                            activateButtons();
+                        }
+                    );
             }
 
             switch (static_cast <ToolbarElement> (event.button))
@@ -379,19 +484,42 @@ namespace MinIDE
                 case ToolbarElement::CMake:
                 {
                     if (promptTargetMissing())
+                    {
                         activeProject->buildStep(0, elements_->targetSelector.caption()); // CMAKE
+                        deactivateButtons();
+                    }
                     break;
                 }
                 case ToolbarElement::Build:
                 {
                     if (promptTargetMissing())
+                    {
                         activeProject->buildStep(1, elements_->targetSelector.caption()); // MAKE
+                        deactivateButtons();
+                    }
                     break;
                 }
                 case ToolbarElement::Run:
                 {
                     if (promptTargetMissing())
+                    {
                         activeProject->run(elements_->targetSelector.caption()); // RUN
+                        deactivateButtons();
+                    }
+                    break;
+                }
+                case ToolbarElement::Cancel:
+                {
+                    activeProject->killProcess();
+                    break;
+                }
+                case ToolbarElement::DebugContinue:
+                {
+                    if (promptTargetMissing())
+                    {
+                        //activeProject->run(elements_->targetSelector.caption()); // RUN
+                        //deactivateButtons();
+                    }
                     break;
                 }
             }
@@ -399,7 +527,19 @@ namespace MinIDE
 
         elements_->targetSelector.events().selected([this](auto const& event)
         {
-
+            if (elements_->targetSelector.option() != nana::npos)
+            {
+                auto* project = elements_->workspace.projectByName(elements_->activeProject.caption());
+                if (!project)
+                    return;
+                if (project->type() != "cmake")
+                    return;
+                auto* target = static_cast <CMakeProject*> (project)->getTarget(elements_->targetSelector.caption());
+                if (target && target->isDebugable)
+                    activate <ToolbarElement::DebugContinue> (elements_->toolbar);
+                else if (target)
+                    deactivate <ToolbarElement::DebugContinue> (elements_->toolbar);
+            }
         });
 
         elements_->activeProject.events().selected([this](auto const& event)

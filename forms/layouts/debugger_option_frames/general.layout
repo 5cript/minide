@@ -1,0 +1,11 @@
+R"(
+<vertical
+	<AutoBuild max=25>
+	<weight=5>
+	<AutoRunBinary max=25>
+	<weight=5>
+	<WatchLocal max=25>
+	<weight=5>
+	<WatchFunctionArgs max=25>
+>
+)"

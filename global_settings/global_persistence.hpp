@@ -4,6 +4,7 @@
 #include "environment.hpp"
 #include "cmake_base_settings.hpp"
 #include "tools.hpp"
+#include "debugger_settings.hpp"
 
 namespace MinIDE
 {
@@ -15,6 +16,8 @@ namespace MinIDE
 
         std::unordered_map <std::string, Environment> environments;
         std::unordered_map <std::string, Tools> tooling;
+        std::unordered_map <std::string, DebuggerSettings> debugger;
+
         CMakeBaseSettings cmakeBaseSettings;
 
         void load();
@@ -29,5 +32,5 @@ namespace MinIDE
 BOOST_FUSION_ADAPT_STRUCT
 (
     MinIDE::GlobalPersistence,
-    environments, tooling, cmakeBaseSettings
+    environments, tooling, debugger, cmakeBaseSettings
 )

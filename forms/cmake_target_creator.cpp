@@ -1,5 +1,4 @@
 #include "cmake_target_creator.hpp"
-#include "../workspace/project_file/cmake_build_profile.hpp"
 
 #include <nana/gui/widgets/combox.hpp>
 #include <nana/gui/widgets/label.hpp>
@@ -20,19 +19,29 @@ namespace MinIDE
         // Widgets
         nana::label nameLabel;
         nana::textbox nameBox;
+
         nana::label envLabel;
         nana::combox envSelector;
+
         nana::label toolLabel;
         nana::combox toolSelector;
+
         nana::label outputLabel;
         nana::textbox outputPath;
+
         nana::label execLabel;
         nana::textbox execBox;
+
         nana::checkbox isDebugable;
+
         nana::label cmakeOptions;
-        nana::checkbox isRelativeOutput;
-        nana::label relativeOutputLabel;
         nana::textbox cmakeBox;
+
+        nana::checkbox isRelativeOutput;
+
+        nana::label makeOptionsLabel;
+        nana::textbox makeOptions;
+
         nana::button okBtn;
         nana::button cancelBtn;
 
@@ -41,13 +50,14 @@ namespace MinIDE
 
         // Other
         bool clickedSave;
+        std::string originalName;
 
         // Target
         ProjectPersistence::CMakeBuildProfile target;
     };
 //---------------------------------------------------------------------------------------------------------------------
     CMakeTargetCreatorImpl::CMakeTargetCreatorImpl(nana::window owner, GlobalPersistence* settings)
-        : form{owner, nana::API::make_center(owner, 500, 240)}
+        : form{owner, nana::API::make_center(owner, 500, 300)}
         , nameLabel{form, "Name: "}
         , nameBox{form, "NewTarget"}
         , envLabel{form, "Environment: "}
@@ -60,18 +70,22 @@ namespace MinIDE
         , execBox{form}
         , isDebugable{form, "Can attach debugger"}
         , cmakeOptions{form, "CMake Options: "}
-        , isRelativeOutput{form}
-        , relativeOutputLabel{form, "Output Path is relative to project: "}
         , cmakeBox{form}
+        , isRelativeOutput{form, "Output Path is relative"}
+        , makeOptionsLabel{form, "Make Options: "}
+        , makeOptions{form}
         , okBtn{form, "Save"}
         , cancelBtn{form, "Cancel"}
         , layout{form}
         , clickedSave{false}
+        , originalName{}
         , target{}
     {
         nameBox.multi_lines(false);
         outputPath.multi_lines(false);
         execBox.multi_lines(false);
+        cmakeBox.multi_lines(false);
+        makeOptions.multi_lines(false);
     }
 //#####################################################################################################################
     CMakeTargetCreator::CMakeTargetCreator(nana::window owner, GlobalPersistence* settings)
@@ -98,6 +112,11 @@ namespace MinIDE
         return elements_->target.name;
     }
 //---------------------------------------------------------------------------------------------------------------------
+    std::string CMakeTargetCreator::originalName() const
+    {
+        return elements_->originalName;
+    }
+//---------------------------------------------------------------------------------------------------------------------
     std::string CMakeTargetCreator::environment() const
     {
         return elements_->target.environment;
@@ -118,14 +137,19 @@ namespace MinIDE
         return elements_->target.outputIsRelative;
     }
 //---------------------------------------------------------------------------------------------------------------------
-    boost::optional <std::string> CMakeTargetCreator::executableName() const
+    std::optional <std::string> CMakeTargetCreator::executableName() const
     {
         return elements_->target.executable;
     }
 //---------------------------------------------------------------------------------------------------------------------
-    boost::optional <std::string> CMakeTargetCreator::cmakeOptions() const
+    std::optional <std::string> CMakeTargetCreator::cmakeOptions() const
     {
         return elements_->target.cmakeOptions;
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    std::optional <std::string> CMakeTargetCreator::makeOptions() const
+    {
+        return elements_->target.makeOptions;
     }
 //---------------------------------------------------------------------------------------------------------------------
     bool CMakeTargetCreator::isDebugable() const
@@ -165,11 +189,38 @@ namespace MinIDE
         target.isDebugable = elements_->isDebugable.checked();
         if (!elements_->cmakeBox.empty())
             target.cmakeOptions = elements_->cmakeBox.caption();
+        if (!elements_->makeOptions.empty())
+            target.makeOptions = elements_->makeOptions.caption();
     }
 //---------------------------------------------------------------------------------------------------------------------
     bool CMakeTargetCreator::clickedSave()
     {
         return elements_->clickedSave;
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void CMakeTargetCreator::setup(
+        std::vector <std::string> const& environments,
+        std::vector <std::string> const& tools,
+        ProjectPersistence::CMakeBuildProfile* target
+    )
+    {
+        setup(environments, tools);
+        elements_->target = *target;
+
+        elements_->originalName = target->name;
+        elements_->nameBox.caption(target->name);
+        elements_->outputPath.caption(target->outputPath);
+        elements_->envSelector.caption(target->environment);
+        elements_->toolSelector.caption(target->toolProfile);
+        elements_->isRelativeOutput.check(target->outputIsRelative);
+        elements_->isDebugable.check(target->isDebugable);
+
+        if (target->executable)
+            elements_->execBox.caption(target->executable.value());
+        if (target->cmakeOptions)
+            elements_->cmakeBox.caption(target->cmakeOptions.value());
+        if (target->makeOptions)
+            elements_->makeOptions.caption(target->makeOptions.value());
     }
 //---------------------------------------------------------------------------------------------------------------------
     void CMakeTargetCreator::setup(
@@ -195,12 +246,13 @@ namespace MinIDE
         layout.field("ToolSelector") << elements_->toolSelector;
         layout.field("OutputPath") << elements_->outputLabel;
         layout.field("OutputBox") << elements_->outputPath;
-        layout.field("OutputRelativeLabel") << elements_->relativeOutputLabel;
         layout.field("OutputRelativeBox") << elements_->isRelativeOutput;
         layout.field("ExecLabel") << elements_->execLabel;
         layout.field("ExecBox") << elements_->execBox;
         layout.field("CMakeOptions") << elements_->cmakeOptions;
         layout.field("CMakeBox") << elements_->cmakeBox;
+        layout.field("MakeOptions") << elements_->makeOptionsLabel;
+        layout.field("MakeBox") << elements_->makeOptions;
         layout.field("IsDebugableChecker") << elements_->isDebugable;
         layout.field("Ok") << elements_->okBtn;
         layout.field("Cancel") << elements_->cancelBtn;

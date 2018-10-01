@@ -23,21 +23,17 @@ namespace MinIDE
     void save(path const& p) const override; \
     void load(path const& p) override
 
-#define IMPLEMENT_SERIALIZABLE(name, is_binary) \
+#define IMPLEMENT_SERIALIZABLE(name) \
     void name::save(filesystem::path const& p) const { \
         namespace io = boost::iostreams; \
         io::filtering_ostream out; \
         out.push(JSON::BeautifiedStreamWrapper{}); \
         out.push(io::file_sink(p.string())); \
-        JSON::StringificationOptions opts; \
-        opts.strings_are_binary = is_binary; \
-        JSON::stringify(out, "minide", *this, opts); \
+        JSON::stringify(out, "minide", *this); \
     } \
     void name::load(filesystem::path const& p) { \
-        JSON::ParsingOptions opts; \
-        opts.strings_are_binary = is_binary; \
         auto stream = std::ifstream{p.string(), std::ios_base::binary}; \
         auto tree = JSON::parse_json(stream); \
         JSON::fill_missing <decltype(*this)> ("", tree); \
-        JSON::parse(*this, "", tree, opts); \
+        JSON::parse(*this, "", tree); \
     }

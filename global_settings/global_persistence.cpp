@@ -5,10 +5,13 @@
 #include <SimpleJSON/parse/jsd.hpp>
 #include <SimpleJSON/utility/fill_missing.hpp>
 
+SJSON_INJECT_STRINGIFY(GdbInterface::GdbRunArguments)
+SJSON_INJECT_PARSE(GdbInterface::GdbRunArguments)
+
 namespace MinIDE
 {
 //#####################################################################################################################
-    IMPLEMENT_SERIALIZABLE(GlobalPersistence, true)
+    IMPLEMENT_SERIALIZABLE(GlobalPersistence)
 //---------------------------------------------------------------------------------------------------------------------
     void GlobalPersistence::load()
     {

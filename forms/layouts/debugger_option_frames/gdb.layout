@@ -1,0 +1,43 @@
+R"(
+<vertical
+	<GdbPathSegment max=25
+		<vertical max=140
+			<weight=3>
+			<GdbPathLabel>
+		>
+		<GdbPath>
+	>
+	<weight=5>
+	<FullyReadSymbols max=25>
+	<weight=5>
+	<NeverReadSymbols max=25>
+	<weight=5>
+	<ReturnChildResult max=25>
+	<weight=5>
+	<InitCommandFileSegment max=25
+		<vertical max=140
+			<weight=3>
+			<InitCommandFileCheck>
+		>
+		<InitCommandFile>
+	>
+	<weight=5>
+	<CommandFileSegment max=25
+		<vertical max=140
+			<weight=3>
+			<CommandFileCheck>
+		>
+		<CommandFile>
+	>
+	<weight=5>
+	<IgnoreHomeGdbInit max=25>
+	<weight=5>
+	<IngoreAllGdbInit max=25>
+	<weight=5>
+	<EnvironmentOverwrites max=25>
+	<weight=5>
+	<ChangeEnvironmentButtonLimiter max=25
+		<ChangeEnvironment max=140>
+	>
+>
+)"

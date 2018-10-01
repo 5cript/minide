@@ -1,6 +1,9 @@
 #include "cmake_project.hpp"
 #include "project_impl.hpp"
 #include "globber.hpp"
+#include "project_file/local.hpp"
+
+#include <gdb-interface/gdb.hpp>
 
 #include <boost/range/iterator_range.hpp>
 #include <iostream>
@@ -12,11 +15,29 @@ using namespace std::string_literals;
 namespace MinIDE
 {
 //#####################################################################################################################
+    struct CMakeProjectImpl
+    {
+        GlobalPersistence* settings;
+
+        std::unique_ptr <AsyncProcess> process;
+        std::unique_ptr <GdbInterface::Gdb> gdb;
+
+        CMakeProjectImpl(GlobalPersistence* settings)
+            : settings{settings}
+            , process{}
+            , gdb{}
+        {
+        }
+    };
+//#####################################################################################################################
     CMakeProject::CMakeProject(GlobalPersistence* settings, path const& rootDir)
         : Project{settings}
+        , cmakeImpl_{new CMakeProjectImpl(settings)}
     {
         load(rootDir);
     }
+//---------------------------------------------------------------------------------------------------------------------
+    CMakeProject::~CMakeProject() = default;
 //---------------------------------------------------------------------------------------------------------------------
     void CMakeProject::load(path const& rootDir)
     {
@@ -89,12 +110,23 @@ namespace MinIDE
         if (target->outputIsRelative)
             buildDirectory = rootDir() / buildDir(target);
 
-        process_ = std::make_unique <AsyncProcess> (
+        cmakeImpl_->process = std::make_unique <AsyncProcess> (
             command,
             buildDirectory.string(),
             env,
-            callback()
+            [this](std::string const& param) {
+                events_.callNamed(ProjectEvents::ProcessOutput, "big_process_output", param);
+            },
+            [this](int param) {
+                events_.callNamed(ProjectEvents::ProcessExited, "big_process_exit", param);
+            }
         );
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void CMakeProject::killProcess()
+    {
+        if (cmakeImpl_->process)
+            cmakeImpl_->process->kill();
     }
 //---------------------------------------------------------------------------------------------------------------------
     void CMakeProject::runCMake(ProjectPersistence::CMakeBuildProfile* target)
@@ -109,7 +141,7 @@ namespace MinIDE
 
         std::string options;
         if (target->cmakeOptions)
-            options = target->cmakeOptions.get();
+            options = target->cmakeOptions.value();
 
         runExternal(
             cmake + " \"" + rootDir().string() + "\" " + options,
@@ -129,7 +161,7 @@ namespace MinIDE
 
         std::string options;
         if (target->makeOptions)
-            options = target->makeOptions.get();
+            options = target->makeOptions.value();
 
         runExternal(make + " " + options, target);
     }
@@ -148,14 +180,20 @@ namespace MinIDE
             buildDirectory = rootDir() / buildDir(targ);
 
         if (targ->executable)
-            runExternal((buildDirectory / targ->executable.get()).string(), targ);
+            runExternal((buildDirectory / targ->executable.value()).string(), targ);
         else
-            callback()("target lacks executable name parameter");
+            events_.callNamed(ProjectEvents::ProcessOutput, "big_process_output", "target lacks executable name parameter");
     }
 //---------------------------------------------------------------------------------------------------------------------
-    void loadEnvironment(ProjectPersistence::CMakeBuildProfile* target)
+    void CMakeProject::runDebug(std::string const& target)
     {
+        auto* targ = getTarget(target);
 
+        auto buildDirectory = buildDir(targ);
+        if (targ->outputIsRelative)
+            buildDirectory = rootDir() / buildDir(targ);
+
+        //impl_->gdb
     }
 //#####################################################################################################################
 }

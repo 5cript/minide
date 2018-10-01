@@ -2,7 +2,11 @@
 
 #include "../global_settings/global_persistence.hpp"
 #include "../filesystem.hpp"
+
 #include "project_file/build_profiles.hpp"
+
+#include "project_events.hpp"
+#include "../event_manager.hpp"
 
 #include <memory>
 
@@ -12,6 +16,13 @@ namespace MinIDE
 
     class Project
     {
+    public:
+        using event_manager_type = EventManagement::EventManager<
+            ProjectEvents,
+            5,
+            int, std::string
+        >;
+
     public:
         Project(GlobalPersistence* settings);
         virtual ~Project();
@@ -27,6 +38,16 @@ namespace MinIDE
          *  Run the build result.
          */
         virtual void run(std::string const& target) = 0;
+
+        /**
+         *  Run with debugger attached.
+         */
+        virtual void runDebug(std::string const& target) = 0;
+
+        /**
+         *  Kill whatever process is currently running.
+         */
+        virtual void killProcess() = 0;
 
         /**
          *  Return the type of the project as string.
@@ -56,7 +77,7 @@ namespace MinIDE
         /**
          *  Callback for process output from the program being run.
          */
-        void setProcessOutputCallback(std::function <void(std::string const&)> const& cb);
+        //void setProcessOutputCallback(std::function <void(std::string const&)> const& cb);
 
         /**
          *  Returns all build target names (e.g. Debug, Release, ...).
@@ -74,6 +95,24 @@ namespace MinIDE
         void saveSettings();
 
         /**
+         *  Add a callback for a certain event.
+         */
+        template <typename FunctionType>
+        void registerCallback(ProjectEvents type, FunctionType const& cb)
+        {
+            events_.add(type, cb);
+        }
+
+        /**
+         *  Add a callback for a certain event and give it a name.
+         */
+        template <typename FunctionType>
+        void registerCallback(ProjectEvents type, std::string const& name, FunctionType const& cb)
+        {
+            events_.add(type, name, cb);
+        }
+
+        /**
          *  Return a detailed build profile from target name. Must be cast to correct build profile.
          */
         virtual ProjectPersistence::BuildProfile* getTarget(std::string const& target);
@@ -87,9 +126,9 @@ namespace MinIDE
         void loadProjectFiles();
         void saveProjectFiles();
         GlobalPersistence* getSettings();
-        std::function <void(std::string const&)> const& callback();
 
     protected:
         std::unique_ptr <ProjectImpl> impl_;
+        event_manager_type events_;
     };
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../global_settings/global_persistence.hpp"
+#include "../workspace/project_file/cmake_build_profile.hpp"
 
 #include <nana/gui/widgets/form.hpp>
 
@@ -17,7 +18,7 @@ namespace MinIDE
     {
     public:
         constexpr static const char* layoutString =
-            #include "layouts/CMakeTargetCreator.layout"
+            #include "layouts/cmake_target_creator.layout"
         ;
 
     public:
@@ -28,17 +29,24 @@ namespace MinIDE
             std::vector <std::string> const& environments,
             std::vector <std::string> const& tools
         );
+        void setup(
+            std::vector <std::string> const& environments,
+            std::vector <std::string> const& tools,
+            ProjectPersistence::CMakeBuildProfile* target
+        );
         void show();
         bool clickedSave();
 
         std::string name() const;
+        std::string originalName() const;
         std::string environment() const;
         std::string tooling() const;
         std::string outputPath() const;
         bool outputIsRelative() const;
-        boost::optional <std::string> executableName() const;
-        boost::optional <std::string> cmakeOptions() const;
+        std::optional <std::string> executableName() const;
+        std::optional <std::string> cmakeOptions() const;
         bool isDebugable() const;
+        std::optional <std::string> makeOptions() const;
 
     private:
         void setupLayout();

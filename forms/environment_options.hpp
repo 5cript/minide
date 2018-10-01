@@ -3,6 +3,7 @@
 #include "../global_settings/global_persistence.hpp"
 #include <nana/gui/widgets/form.hpp>
 #include <memory>
+#include <functional>
 
 namespace MinIDE
 {
@@ -12,11 +13,16 @@ namespace MinIDE
     {
     public:
         constexpr static const char* layoutString =
-            #include "layouts/EnvironmentOptions.layout"
+            #include "layouts/environment_options.layout"
         ;
 
     public:
-        EnvironmentOptions(nana::window owner, GlobalPersistence* settings);
+        EnvironmentOptions(
+            nana::window owner,
+            std::unordered_map <std::string, Environment>* environments,
+            std::function <void()> saveFunction,
+            bool noProfiles = false
+        );
         ~EnvironmentOptions();
 
         void show();

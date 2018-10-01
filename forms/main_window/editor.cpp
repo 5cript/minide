@@ -83,6 +83,7 @@ namespace MinIDE
         setLayout();
         registerTabEvents();
         registerEditorEvents();
+        registerNumberPaneEvents();
         elements_->tabs.close_fly(true);
         elements_->tabs.toolbox(nana::tabbar<int>::kits::close, true);
         elements_->tabs.toolbox(nana::tabbar<int>::kits::list, true);
@@ -93,6 +94,7 @@ namespace MinIDE
         setHighlighting({DefaultHighlighting::CppDefault});
         elements_->textbox.typeface({"Consolas", 12});
         elements_->textbox.indention(true);
+        elements_->textbox.multi_lines(true);
     }
 //---------------------------------------------------------------------------------------------------------------------
     Editor::~Editor() = default;
@@ -265,6 +267,22 @@ namespace MinIDE
             return;
         }
         #endif
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void Editor::registerNumberPaneEvents()
+    {
+        elements_->lineNumbers.events().click([this](auto const& event) {
+            auto const& textbox = elements_->textbox;
+
+            auto linePx = textbox.line_pixels();
+            if (0 == linePx)
+                std::cout << "[INVALID]\n";
+
+            auto line = 1 + (event.mouse_args->pos.y + textbox.content_origin().y) / linePx;
+            auto file = elements_->fileStore.selected().file().string();
+
+            std::cout << "breakpoint toggle in " << file << "[" << line << "]" << "\n";
+        });
     }
 //#####################################################################################################################
 }

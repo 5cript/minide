@@ -4,7 +4,7 @@ R"(
 		<weight=5>
 		<vertical margin=5
 			<max=25
-				<vertical max=120
+				<vertical max=140
 					<weight=3>
 					<NameLabel>
 				>
@@ -12,7 +12,7 @@ R"(
 			>
 			<weight=5>
 			<max=25
-				<vertical max=120
+				<vertical max=140
 					<weight=3>
 					<EnvLabel>
 				>
@@ -20,7 +20,7 @@ R"(
 			>
 			<weight=5>
 			<max=25
-				<vertical max=120
+				<vertical max=140
 					<weight=3>
 					<ToolLabel>
 				>
@@ -28,7 +28,7 @@ R"(
 			>
 			<weight=5>
 			<max=25
-				<vertical max=120
+				<vertical max=140
 					<weight=3>
 					<CMakeOptions>
 				>
@@ -36,26 +36,32 @@ R"(
 			>
 			<weight=5>
 			<max=25
-				<vertical max=120
+				<vertical max=140
+					<weight=3>
+					<MakeOptions>
+				>
+				<MakeBox>
+			>
+			<weight=5>
+			<max=25
+				<vertical max=140
 					<weight=3>
 					<OutputPath>
 				>
 				<
 					<OutputBox>
-					<OutputBoxChooserBtn weight=25>
 				>
 			>
 			<weight=5>
-			<max=25
-				<vertical max=120
+			<max=18
+				<vertical max=140
 					<weight=3>
-					<OutputRelativeLabel>
 				>
 				<OutputRelativeBox>
 			>
 			<weight=5>
 			<max=25
-				<vertical max=120
+				<vertical max=140
 					<weight=3>
 					<ExecLabel>
 				>
@@ -63,7 +69,7 @@ R"(
 			>
 			<weight=5>
 			<max=18
-				<vertical max=120>
+				<vertical max=140>
 				<IsDebugableChecker>
 			>
 		>

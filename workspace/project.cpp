@@ -102,11 +102,6 @@ namespace MinIDE
         return impl_->settings;
     }
 //---------------------------------------------------------------------------------------------------------------------
-    std::function <void(std::string const&)> const& Project::callback()
-    {
-        return impl_->cb;
-    }
-//---------------------------------------------------------------------------------------------------------------------
     std::string Project::name() const
     {
         return impl_->rootDir.filename().string();
@@ -120,11 +115,6 @@ namespace MinIDE
     std::vector <path> const* Project::directories() const
     {
         return &impl_->directories;
-    }
-//---------------------------------------------------------------------------------------------------------------------
-    void Project::setProcessOutputCallback(std::function <void(std::string const&)> const& cb)
-    {
-        impl_->cb = cb;
     }
 //#####################################################################################################################
 }

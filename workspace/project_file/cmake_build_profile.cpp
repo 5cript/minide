@@ -9,10 +9,11 @@ namespace MinIDE::ProjectPersistence
         bool outputIsRelative,
         std::string environment,
         std::string toolProfile,
-        boost::optional <std::string> executable,
+        std::optional <std::string> executable,
         bool isDebugable,
-        boost::optional <std::string> cmakeOptions,
-        boost::optional <std::string> makeOptions
+        std::optional <DebuggerSettings> debuggerSettings,
+        std::optional <std::string> cmakeOptions,
+        std::optional <std::string> makeOptions
     )
         : BuildProfile{
             std::move(name),
@@ -21,7 +22,8 @@ namespace MinIDE::ProjectPersistence
             std::move(environment),
             std::move(toolProfile),
             std::move(executable),
-            std::move(isDebugable)
+            std::move(isDebugable),
+            std::move(debuggerSettings)
         }
         , cmakeOptions{std::move(cmakeOptions)}
         , makeOptions{std::move(makeOptions)}

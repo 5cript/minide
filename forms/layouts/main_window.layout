@@ -2,7 +2,7 @@ R"(
 <vertical 
 	<weight=25>
 	<weight=25
-		<Toolbar weight=150>
+		<Toolbar>
 		<Profiles
 			<ProjectSelector max=150>
 			<TargetSelector max=150>

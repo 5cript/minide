@@ -9,8 +9,9 @@ namespace MinIDE::ProjectPersistence
         bool outputIsRelative,
         std::string environment,
         std::string toolProfile,
-        boost::optional <std::string> executable,
-        bool isDebugable
+        std::optional <std::string> executable,
+        bool isDebugable,
+        std::optional <DebuggerSettings> debuggerSettings
     )
         : name{name}
         , outputPath{outputPath}
@@ -19,6 +20,7 @@ namespace MinIDE::ProjectPersistence
         , toolProfile{toolProfile}
         , executable{executable}
         , isDebugable{isDebugable}
+        , debuggerSettings{debuggerSettings}
     {
 
     }

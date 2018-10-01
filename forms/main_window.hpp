@@ -13,7 +13,7 @@ namespace MinIDE
     {
     public:
         constexpr static const char* layoutString =
-            #include "layouts/MainWindow.layout"
+            #include "layouts/main_window.layout"
         ;
 
     public:
@@ -35,6 +35,7 @@ namespace MinIDE
         void refreshProjectSelector();
         void setActiveProject(std::string const& name);
         void addTarget();
+        void editTarget();
         void removeTarget();
 
         /**

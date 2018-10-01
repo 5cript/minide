@@ -2,8 +2,9 @@
 
 #include "../../json_public.hpp"
 
+#include "../../global_settings/debugger_settings.hpp"
 #include <string>
-#include <boost/optional.hpp>
+#include <optional>
 
 namespace MinIDE::ProjectPersistence
 {
@@ -16,8 +17,9 @@ namespace MinIDE::ProjectPersistence
             bool outputIsRelative = true,
             std::string environment = "",
             std::string toolProfile = "",
-            boost::optional <std::string> executable = boost::none,
-            bool isDebugable = false
+            std::optional <std::string> executable = std::nullopt,
+            bool isDebugable = false,
+            std::optional <DebuggerSettings> debuggerSettings = std::nullopt
         );
 
         std::string name;
@@ -25,13 +27,14 @@ namespace MinIDE::ProjectPersistence
         bool outputIsRelative;
         std::string environment;
         std::string toolProfile;
-        boost::optional <std::string> executable;
+        std::optional <std::string> executable;
         bool isDebugable;
+        std::optional <DebuggerSettings> debuggerSettings;
     };
 }
 
 BOOST_FUSION_ADAPT_STRUCT
 (
     MinIDE::ProjectPersistence::BuildProfile,
-    name, outputPath, outputIsRelative, executable, isDebugable, environment, toolProfile
+    name, outputPath, outputIsRelative, executable, isDebugable, environment, toolProfile, debuggerSettings
 )
