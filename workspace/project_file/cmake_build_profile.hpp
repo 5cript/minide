@@ -26,8 +26,11 @@ namespace MinIDE::ProjectPersistence
             std::string environment = "",
             std::string toolProfile = "",
             std::optional <std::string> executable = std::nullopt,
+            std::optional <std::string> arguments = std::nullopt,
             bool isDebugable = false,
             std::optional <DebuggerSettings> debuggerSettings = std::nullopt,
+            std::optional <std::string> executionDirectory = std::nullopt,
+            bool executionDirectoryIsRelative = false,
             std::optional <std::string> cmakeOptions = std::nullopt,
             std::optional <std::string> makeOptions = std::nullopt
         );
@@ -40,5 +43,6 @@ namespace MinIDE::ProjectPersistence
 BOOST_FUSION_ADAPT_STRUCT
 (
     MinIDE::ProjectPersistence::CMakeBuildProfile,
-    name, outputPath, outputIsRelative, executable, isDebugable, debuggerSettings, environment, toolProfile, cmakeOptions, makeOptions
+    name, outputPath, outputIsRelative, executable, arguments, isDebugable, debuggerSettings, executionDirectory, environment, toolProfile,
+    cmakeOptions, makeOptions, executionDirectoryIsRelative
 )

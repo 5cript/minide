@@ -29,6 +29,25 @@ namespace MinIDE
         std::optional <std::string> commandFile;
         std::optional <bool> ignoreHomeGdbInit; // => default: false
         std::optional <bool> ignoreAllGdbInit; // => default: false
+        std::optional <std::string> dataDirectory;
+
+        ~GdbSettings() = default;
+
+        static GdbSettings makeDefault()
+        {
+            GdbSettings settings;
+#ifdef _WIN32
+            settings.gdbPath = "gdb.exe";
+#else
+            settings.gdbPath = "gdb";
+#endif
+            settings.fullyReadSymbols = false;
+            settings.neverReadSymbols = false;
+            settings.returnChildResult = true;
+            settings.ignoreHomeGdbInit = false;
+            settings.ignoreAllGdbInit = false;
+            return settings;
+        }
     };
 
     struct DebuggerSettings : public JSON::Stringifiable <DebuggerSettings>

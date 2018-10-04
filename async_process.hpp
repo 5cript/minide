@@ -20,11 +20,13 @@ namespace MinIDE
         );
         ~AsyncProcess();
         void kill();
+        bool isRunning() const;
 
     private:
         std::thread thread_;
         std::unique_ptr <TinyProcessLib::Process> process_;
         std::function <void(std::string const&)> consoleOutCb_;
         std::function <void(int exitCode)> processEndedCb_;
+        bool isRunning_;
     };
 }

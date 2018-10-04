@@ -13,6 +13,11 @@ namespace MinIDE
         std::string name;
         std::string path;
         std::unordered_map <std::string, std::string> variables;
+
+        std::unordered_map <std::string, std::string> compile() const;
+
+        /// priority is other, if clashing
+        Environment merge(Environment const& other);
     };
 }
 

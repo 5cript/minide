@@ -42,11 +42,16 @@ namespace MinIDE
         std::string environment() const;
         std::string tooling() const;
         std::string outputPath() const;
-        bool outputIsRelative() const;
+        bool outputIsRelative() const noexcept;
         std::optional <std::string> executableName() const;
         std::optional <std::string> cmakeOptions() const;
-        bool isDebugable() const;
+        bool isDebugable() const noexcept;
         std::optional <std::string> makeOptions() const;
+        std::optional <std::string> arguments() const;
+        std::optional <std::string> executionDirectory() const;
+        bool executionDirectoryIsRelative() const noexcept;
+
+        ProjectPersistence::CMakeBuildProfile getTarget() const;
 
     private:
         void setupLayout();

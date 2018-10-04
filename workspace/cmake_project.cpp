@@ -2,8 +2,7 @@
 #include "project_impl.hpp"
 #include "globber.hpp"
 #include "project_file/local.hpp"
-
-#include <gdb-interface/gdb.hpp>
+#include "debugger/gdb.hpp"
 
 #include <boost/range/iterator_range.hpp>
 #include <iostream>
@@ -20,19 +19,49 @@ namespace MinIDE
         GlobalPersistence* settings;
 
         std::unique_ptr <AsyncProcess> process;
-        std::unique_ptr <GdbInterface::Gdb> gdb;
+        GdbCommunicator gdb;
 
-        CMakeProjectImpl(GlobalPersistence* settings)
+        CMakeProjectImpl(CMakeProject& owner, GlobalPersistence* settings)
             : settings{settings}
             , process{}
-            , gdb{}
+            , gdb{&owner.getEventManager()}
         {
         }
     };
 //#####################################################################################################################
+    void DebugCommands::step()
+    {
+        //project->cmakeImpl_->gdb.step();
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void DebugCommands::nextLine()
+    {
+
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void DebugCommands::stepInto()
+    {
+
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void DebugCommands::stepOut()
+    {
+
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void DebugCommands::nextInstruction()
+    {
+
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void DebugCommands::stepIntoInstruction()
+    {
+
+    }
+//#####################################################################################################################
     CMakeProject::CMakeProject(GlobalPersistence* settings, path const& rootDir)
         : Project{settings}
-        , cmakeImpl_{new CMakeProjectImpl(settings)}
+        , cmakeImpl_{new CMakeProjectImpl(*this, settings)}
     {
         load(rootDir);
     }
@@ -91,7 +120,11 @@ namespace MinIDE
         }
     }
 //---------------------------------------------------------------------------------------------------------------------
-    void CMakeProject::runExternal(std::string const& command, ProjectPersistence::CMakeBuildProfile* target)
+    void CMakeProject::runExternal(
+        std::string const& command,
+        std::string const& outputPipe,
+        ProjectPersistence::CMakeBuildProfile* target
+    )
     {
         auto* settings = getSettings();
 
@@ -101,9 +134,7 @@ namespace MinIDE
             throw std::runtime_error("the local project asked for an environment setting that does not exist on this computer");
 
         // set environment
-        std::unordered_map <std::string, std::string> env;
-        env["PATH"] = environment_iter->second.path;
-        env.insert(std::begin(environment_iter->second.variables), std::end(environment_iter->second.variables));
+        std::unordered_map <std::string, std::string> env = environment_iter->second.compile();
 
         // set other variables
         auto buildDirectory = buildDir(target);
@@ -114,19 +145,27 @@ namespace MinIDE
             command,
             buildDirectory.string(),
             env,
-            [this](std::string const& param) {
-                events_.callNamed(ProjectEvents::ProcessOutput, "big_process_output", param);
+            [this, outputPipe](std::string const& param) {
+                events_.callNamed(ProjectEvents::ProcessOutput, outputPipe, param);
             },
             [this](int param) {
-                events_.callNamed(ProjectEvents::ProcessExited, "big_process_exit", param);
+                events_.callNamed(ProjectEvents::ProcessExited, "process_exit", param);
+                //cmakeImpl_->process.reset(nullptr);
             }
         );
     }
 //---------------------------------------------------------------------------------------------------------------------
     void CMakeProject::killProcess()
     {
-        if (cmakeImpl_->process)
+        if (cmakeImpl_->process && cmakeImpl_->process->isRunning())
             cmakeImpl_->process->kill();
+        else if (cmakeImpl_->gdb.isRunning())
+        {
+            if (cmakeImpl_->gdb.wasStopped())
+                cmakeImpl_->gdb.kill();
+            else
+                cmakeImpl_->gdb.stop();
+        }
     }
 //---------------------------------------------------------------------------------------------------------------------
     void CMakeProject::runCMake(ProjectPersistence::CMakeBuildProfile* target)
@@ -145,6 +184,7 @@ namespace MinIDE
 
         runExternal(
             cmake + " \"" + rootDir().string() + "\" " + options,
+            "build_log",
             target
         );
     }
@@ -163,7 +203,7 @@ namespace MinIDE
         if (target->makeOptions)
             options = target->makeOptions.value();
 
-        runExternal(make + " " + options, target);
+        runExternal(make + " " + options, "build_log", target);
     }
 //---------------------------------------------------------------------------------------------------------------------
     path CMakeProject::buildDir(ProjectPersistence::CMakeBuildProfile* target) const
@@ -180,20 +220,48 @@ namespace MinIDE
             buildDirectory = rootDir() / buildDir(targ);
 
         if (targ->executable)
-            runExternal((buildDirectory / targ->executable.value()).string(), targ);
+            runExternal((buildDirectory / targ->executable.value()).string(), "process_output", targ);
         else
-            events_.callNamed(ProjectEvents::ProcessOutput, "big_process_output", "target lacks executable name parameter");
+            events_.callNamed(ProjectEvents::Info, "info", "target lacks executable name parameter");
     }
 //---------------------------------------------------------------------------------------------------------------------
-    void CMakeProject::runDebug(std::string const& target)
+    void CMakeProject::runDebug(std::string const& target, std::string const& debuggerProfile)
     {
         auto* targ = getTarget(target);
+
+        if (!targ->executable)
+        {
+            events_.callNamed(ProjectEvents::Info, "info", "target lacks executable name parameter");
+            return;
+        }
 
         auto buildDirectory = buildDir(targ);
         if (targ->outputIsRelative)
             buildDirectory = rootDir() / buildDir(targ);
 
-        //impl_->gdb
+        auto debuggerSettings = impl_->settings->debugger.at(debuggerProfile);
+        if (targ->debuggerSettings)
+        {
+            debuggerSettings = targ->debuggerSettings.value();
+            events_.callNamed(ProjectEvents::Info, "info", "using project locally defined debugger settings");
+        }
+
+        // find environment
+        auto environment_iter = impl_->settings->environments.find(targ->environment);
+        if (environment_iter == std::end(impl_->settings->environments))
+            throw std::runtime_error("the local project asked for an environment setting that does not exist on this computer");
+
+        cmakeImpl_->gdb.run(rootDir(), debuggerSettings, targ, environment_iter->second);
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    bool CMakeProject::isDebugging() const
+    {
+        return cmakeImpl_->gdb.isRunning();
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    DebugCommands CMakeProject::debugCommands()
+    {
+        return DebugCommands{this};
     }
 //#####################################################################################################################
 }

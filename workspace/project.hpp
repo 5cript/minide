@@ -17,11 +17,7 @@ namespace MinIDE
     class Project
     {
     public:
-        using event_manager_type = EventManagement::EventManager<
-            ProjectEvents,
-            5,
-            int, std::string
-        >;
+        using event_manager_type = ProjectEventManagerType;
 
     public:
         Project(GlobalPersistence* settings);
@@ -42,7 +38,7 @@ namespace MinIDE
         /**
          *  Run with debugger attached.
          */
-        virtual void runDebug(std::string const& target) = 0;
+        virtual void runDebug(std::string const& target, std::string const& debuggerProfile) = 0;
 
         /**
          *  Kill whatever process is currently running.
@@ -73,11 +69,6 @@ namespace MinIDE
          *  Return all directories associated with the project (recursive).
          */
         std::vector <path> const* directories() const;
-
-        /**
-         *  Callback for process output from the program being run.
-         */
-        //void setProcessOutputCallback(std::function <void(std::string const&)> const& cb);
 
         /**
          *  Returns all build target names (e.g. Debug, Release, ...).
@@ -116,6 +107,8 @@ namespace MinIDE
          *  Return a detailed build profile from target name. Must be cast to correct build profile.
          */
         virtual ProjectPersistence::BuildProfile* getTarget(std::string const& target);
+
+        event_manager_type& getEventManager();
 
     protected:
         void glob(

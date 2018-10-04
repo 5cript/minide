@@ -68,6 +68,29 @@ R"(
 				<ExecBox>
 			>
 			<weight=5>
+			<max=25
+				<vertical max=140
+					<weight=3>
+					<ArgsLabel>
+				>
+				<ArgsBox>
+			>
+			<weight=5>
+			<max=25
+				<vertical max=140
+					<weight=3>
+					<ExecDirLabel>
+				>
+				<ExecDirBox>
+			>
+			<weight=5>
+			<max=18
+				<vertical max=140
+					<weight=3>
+				>
+				<ExecDirRelativeBox>
+			>
+			<weight=5>
 			<max=18
 				<vertical max=140>
 				<IsDebugableChecker>

@@ -24,8 +24,22 @@ namespace MinIDE
         ~LogTabs();
 
         void loadTheme(Theme const& theme);
-        void addText(std::string const& data);
-        void clear();
+        void addInfo(std::string const& data);
+        void addBuildLog(std::string const& data);
+        void addBuildMessage(std::string const& data);
+        void addProgramOutput(std::string const& data);
+        void addDebuggerOutput(std::string const& data);
+        void clearAll();
+        void clearInfo();
+        void clearBuildLog();
+        void clearBuildMessages();
+        void clearProgramOutput();
+        void clearDebuggerOutput();
+
+        void selectBuildMessages();
+        void selectBuildLog();
+        void selectProgramOutput();
+        void selectDebuggerOutput();
 
     private:
         void setLayout();

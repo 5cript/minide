@@ -9,12 +9,26 @@
 
 namespace MinIDE
 {
+    class CMakeProject;
     struct CMakeProjectImpl;
+
+    struct DebugCommands
+    {
+        void step();
+        void nextLine();
+        void stepInto();
+        void stepOut();
+        void nextInstruction();
+        void stepIntoInstruction();
+
+        CMakeProject* project;
+    };
 
     class CMakeProject : public Project
     {
     public:
         NONCOPY(CMakeProject);
+        friend DebugCommands;
 
     public:
         /**
@@ -46,7 +60,12 @@ namespace MinIDE
         /**
          *  Run the program with debugger attached.
          */
-        void runDebug(std::string const& target) override;
+        void runDebug(std::string const& target, std::string const& debuggerProfile) override;
+
+        /**
+         *  Returns whether the project is currently debugged or not.
+         */
+        bool isDebugging() const;
 
         /**
          *  Kill whatever process is currently running.
@@ -59,13 +78,19 @@ namespace MinIDE
         std::string type() const;
 
         /**
+         *  A proxy to contain more commands for debugging.
+         *  @throw If not debugging
+         */
+        DebugCommands debugCommands();
+
+        /**
          *  Add a build target.
          */
         void addTarget(ProjectPersistence::CMakeBuildProfile const& target);
         ProjectPersistence::CMakeBuildProfile* getTarget(std::string const& target) override;
 
     private:
-        void runExternal(std::string const& command, ProjectPersistence::CMakeBuildProfile* target);
+        void runExternal(std::string const& command, std::string const& outputPipe, ProjectPersistence::CMakeBuildProfile* target);
         void runCMake(ProjectPersistence::CMakeBuildProfile* target);
         void runMake(ProjectPersistence::CMakeBuildProfile* target);
 

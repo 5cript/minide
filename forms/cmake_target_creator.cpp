@@ -42,6 +42,14 @@ namespace MinIDE
         nana::label makeOptionsLabel;
         nana::textbox makeOptions;
 
+        nana::label execDirLabel;
+        nana::textbox execDirBox;
+
+        nana::checkbox isRelativeExecDir;
+
+        nana::label argsLabel;
+        nana::textbox argsBox;
+
         nana::button okBtn;
         nana::button cancelBtn;
 
@@ -57,7 +65,7 @@ namespace MinIDE
     };
 //---------------------------------------------------------------------------------------------------------------------
     CMakeTargetCreatorImpl::CMakeTargetCreatorImpl(nana::window owner, GlobalPersistence* settings)
-        : form{owner, nana::API::make_center(owner, 500, 300)}
+        : form{owner, nana::API::make_center(owner, 500, 400)}
         , nameLabel{form, "Name: "}
         , nameBox{form, "NewTarget"}
         , envLabel{form, "Environment: "}
@@ -74,6 +82,11 @@ namespace MinIDE
         , isRelativeOutput{form, "Output Path is relative"}
         , makeOptionsLabel{form, "Make Options: "}
         , makeOptions{form}
+        , execDirLabel{form, "Execution Directory: "}
+        , execDirBox{form}
+        , isRelativeExecDir{form, "Execution Directory is relative"}
+        , argsLabel{form, "Program Arguments: "}
+        , argsBox{form}
         , okBtn{form, "Save"}
         , cancelBtn{form, "Cancel"}
         , layout{form}
@@ -86,6 +99,8 @@ namespace MinIDE
         execBox.multi_lines(false);
         cmakeBox.multi_lines(false);
         makeOptions.multi_lines(false);
+        execDirBox.multi_lines(false);
+        argsBox.multi_lines(false);
     }
 //#####################################################################################################################
     CMakeTargetCreator::CMakeTargetCreator(nana::window owner, GlobalPersistence* settings)
@@ -132,7 +147,7 @@ namespace MinIDE
         return elements_->target.outputPath;
     }
 //---------------------------------------------------------------------------------------------------------------------
-    bool CMakeTargetCreator::outputIsRelative() const
+    bool CMakeTargetCreator::outputIsRelative() const noexcept
     {
         return elements_->target.outputIsRelative;
     }
@@ -152,9 +167,29 @@ namespace MinIDE
         return elements_->target.makeOptions;
     }
 //---------------------------------------------------------------------------------------------------------------------
-    bool CMakeTargetCreator::isDebugable() const
+    bool CMakeTargetCreator::isDebugable() const noexcept
     {
         return elements_->target.isDebugable;
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    std::optional <std::string> CMakeTargetCreator::arguments() const
+    {
+        return elements_->target.arguments;
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    std::optional <std::string> CMakeTargetCreator::executionDirectory() const
+    {
+        return elements_->target.executionDirectory;
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    bool CMakeTargetCreator::executionDirectoryIsRelative() const noexcept
+    {
+        return elements_->target.executionDirectoryIsRelative;
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    ProjectPersistence::CMakeBuildProfile CMakeTargetCreator::getTarget() const
+    {
+        return elements_->target;
     }
 //---------------------------------------------------------------------------------------------------------------------
     CMakeTargetCreator::~CMakeTargetCreator() = default;
@@ -183,6 +218,7 @@ namespace MinIDE
         target.environment = elements_->envSelector.caption();
         target.toolProfile = elements_->toolSelector.caption();
         target.outputIsRelative = elements_->isRelativeOutput.checked();
+        target.executionDirectoryIsRelative = elements_->isRelativeExecDir.checked();
 
         if (!elements_->execBox.empty())
             target.executable = elements_->execBox.caption();
@@ -191,6 +227,10 @@ namespace MinIDE
             target.cmakeOptions = elements_->cmakeBox.caption();
         if (!elements_->makeOptions.empty())
             target.makeOptions = elements_->makeOptions.caption();
+        if (!elements_->execDirBox.empty())
+            target.executionDirectory = elements_->execDirBox.caption();
+        if (!elements_->argsBox.empty())
+            target.arguments = elements_->argsBox.caption();
     }
 //---------------------------------------------------------------------------------------------------------------------
     bool CMakeTargetCreator::clickedSave()
@@ -214,6 +254,7 @@ namespace MinIDE
         elements_->toolSelector.caption(target->toolProfile);
         elements_->isRelativeOutput.check(target->outputIsRelative);
         elements_->isDebugable.check(target->isDebugable);
+        elements_->isRelativeExecDir.check(target->executionDirectoryIsRelative);
 
         if (target->executable)
             elements_->execBox.caption(target->executable.value());
@@ -221,6 +262,10 @@ namespace MinIDE
             elements_->cmakeBox.caption(target->cmakeOptions.value());
         if (target->makeOptions)
             elements_->makeOptions.caption(target->makeOptions.value());
+        if (target->arguments)
+            elements_->argsBox.caption(target->arguments.value());
+        if (target->executionDirectory)
+            elements_->execDirBox.caption(target->executionDirectory.value());
     }
 //---------------------------------------------------------------------------------------------------------------------
     void CMakeTargetCreator::setup(
@@ -249,6 +294,11 @@ namespace MinIDE
         layout.field("OutputRelativeBox") << elements_->isRelativeOutput;
         layout.field("ExecLabel") << elements_->execLabel;
         layout.field("ExecBox") << elements_->execBox;
+        layout.field("ArgsLabel") << elements_->argsLabel;
+        layout.field("ArgsBox") << elements_->argsBox;
+        layout.field("ExecDirLabel") << elements_->execDirLabel;
+        layout.field("ExecDirBox") << elements_->execDirBox;
+        layout.field("ExecDirRelativeBox") << elements_->isRelativeExecDir;
         layout.field("CMakeOptions") << elements_->cmakeOptions;
         layout.field("CMakeBox") << elements_->cmakeBox;
         layout.field("MakeOptions") << elements_->makeOptionsLabel;

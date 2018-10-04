@@ -86,6 +86,11 @@ namespace MinIDE
         impl_->directories = dirGlob.globRecursive(std::vector <std::string>{}, false);
     }
 //---------------------------------------------------------------------------------------------------------------------
+    Project::event_manager_type& Project::getEventManager()
+    {
+        return events_;
+    }
+//---------------------------------------------------------------------------------------------------------------------
     void Project::load(path const& rootDir)
     {
         impl_->rootDir = rootDir;

@@ -18,8 +18,11 @@ namespace MinIDE::ProjectPersistence
             std::string environment = "",
             std::string toolProfile = "",
             std::optional <std::string> executable = std::nullopt,
+            std::optional <std::string> arguments = std::nullopt,
             bool isDebugable = false,
-            std::optional <DebuggerSettings> debuggerSettings = std::nullopt
+            std::optional <DebuggerSettings> debuggerSettings = std::nullopt,
+            std::optional <std::string> executionDirectory = std::nullopt,
+            bool executionDirectoryIsRelative = false
         );
 
         std::string name;
@@ -28,13 +31,17 @@ namespace MinIDE::ProjectPersistence
         std::string environment;
         std::string toolProfile;
         std::optional <std::string> executable;
+        std::optional <std::string> arguments;
         bool isDebugable;
         std::optional <DebuggerSettings> debuggerSettings;
+        std::optional <std::string> executionDirectory;
+        bool executionDirectoryIsRelative;
     };
 }
 
 BOOST_FUSION_ADAPT_STRUCT
 (
     MinIDE::ProjectPersistence::BuildProfile,
-    name, outputPath, outputIsRelative, executable, isDebugable, environment, toolProfile, debuggerSettings
+    name, outputPath, outputIsRelative, executable, arguments, isDebugable, environment, toolProfile, debuggerSettings,
+    executionDirectory, executionDirectoryIsRelative
 )

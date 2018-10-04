@@ -257,17 +257,7 @@ namespace MinIDE
             if (targetCreator.clickedSave())
             {
                 static_cast <CMakeProject*> (project)->addTarget(
-                    ProjectPersistence::CMakeBuildProfile{
-                        targetCreator.name(),
-                        targetCreator.outputPath(),
-                        targetCreator.outputIsRelative(),
-                        targetCreator.environment(),
-                        targetCreator.tooling(),
-                        targetCreator.executableName(),
-                        targetCreator.isDebugable(),
-                        std::nullopt,
-                        targetCreator.cmakeOptions()
-                    }
+                    targetCreator.getTarget()
                 );
                 elements_->targetSelector.push_back(targetCreator.name());
             }
@@ -305,24 +295,14 @@ namespace MinIDE
             targetCreator.show();
             if (targetCreator.clickedSave())
             {
-                *target = ProjectPersistence::CMakeBuildProfile{
-                    targetCreator.name(),
-                    targetCreator.outputPath(),
-                    targetCreator.outputIsRelative(),
-                    targetCreator.environment(),
-                    targetCreator.tooling(),
-                    targetCreator.executableName(),
-                    targetCreator.isDebugable(),
-                    std::nullopt,
-                    targetCreator.cmakeOptions(),
-                    targetCreator.makeOptions()
-                };
+                *target = targetCreator.getTarget();
                 if (targetCreator.originalName() != targetCreator.name())
                 {
                     elements_->targetSelector.erase(elements_->targetSelector.option());
                     elements_->targetSelector.push_back(targetCreator.name());
                     elements_->targetSelector.option(elements_->targetSelector.the_number_of_options() - 1);
                 }
+                project->saveSettings();
             }
         }
     }
@@ -455,13 +435,28 @@ namespace MinIDE
                 case ToolbarElement::CMake:
                 case ToolbarElement::Build:
                 case ToolbarElement::Run:
-                    elements_->logTabs.clear();
-                    activeProject->registerCallback(ProjectEvents::ProcessOutput, "big_process_output",
+                case ToolbarElement::DebugContinue:
+                    activeProject->registerCallback(ProjectEvents::Info, "info",
                         [this](std::string const& str) {
-                            elements_->logTabs.addText(str);
+                            elements_->logTabs.addInfo(str);
                         }
                     );
-                    activeProject->registerCallback(ProjectEvents::ProcessExited, "big_process_exit",
+                    activeProject->registerCallback(ProjectEvents::ProcessOutput, "build_log",
+                        [this](std::string const& str) {
+                            elements_->logTabs.addBuildLog(str);
+                        }
+                    );
+                    activeProject->registerCallback(ProjectEvents::ProcessOutput, "process_output",
+                        [this](std::string const& str) {
+                            elements_->logTabs.addProgramOutput(str);
+                        }
+                    );
+                    activeProject->registerCallback(ProjectEvents::ProcessOutput, "debugger_output",
+                        [this](std::string const& str) {
+                            elements_->logTabs.addDebuggerOutput(str);
+                        }
+                    );
+                    activeProject->registerCallback(ProjectEvents::ProcessExited, "process_exit",
                         [activateButtons](int const&) {
                             activateButtons();
                         }
@@ -483,6 +478,9 @@ namespace MinIDE
                 }
                 case ToolbarElement::CMake:
                 {
+                    elements_->logTabs.clearBuildMessages();
+                    elements_->logTabs.clearBuildLog();
+                    elements_->logTabs.selectBuildLog();
                     if (promptTargetMissing())
                     {
                         activeProject->buildStep(0, elements_->targetSelector.caption()); // CMAKE
@@ -492,6 +490,9 @@ namespace MinIDE
                 }
                 case ToolbarElement::Build:
                 {
+                    elements_->logTabs.clearBuildMessages();
+                    elements_->logTabs.clearBuildLog();
+                    elements_->logTabs.selectBuildLog();
                     if (promptTargetMissing())
                     {
                         activeProject->buildStep(1, elements_->targetSelector.caption()); // MAKE
@@ -501,6 +502,8 @@ namespace MinIDE
                 }
                 case ToolbarElement::Run:
                 {
+                    elements_->logTabs.clearProgramOutput();
+                    elements_->logTabs.selectProgramOutput();
                     if (promptTargetMissing())
                     {
                         activeProject->run(elements_->targetSelector.caption()); // RUN
@@ -515,10 +518,19 @@ namespace MinIDE
                 }
                 case ToolbarElement::DebugContinue:
                 {
+                    elements_->logTabs.clearDebuggerOutput();
+                    elements_->logTabs.selectDebuggerOutput();
                     if (promptTargetMissing())
                     {
-                        //activeProject->run(elements_->targetSelector.caption()); // RUN
-                        //deactivateButtons();
+                        auto cmakeProject = dynamic_cast <CMakeProject*>(activeProject);
+                        if (cmakeProject)
+                        {
+                            if (!cmakeProject->isDebugging())
+                                cmakeProject->runDebug(elements_->targetSelector.caption(), "Default"); // RUN DEBUG
+                            else
+                                cmakeProject->debugCommands().step();
+                            deactivateButtons();
+                        }
                     }
                     break;
                 }

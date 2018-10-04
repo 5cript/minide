@@ -27,12 +27,14 @@ namespace MinIDE
         , process_{}
         , consoleOutCb_{std::move(consoleOutCb)}
         , processEndedCb_{std::move(processEndedCb)}
+        , isRunning_{false}
     {
         thread_ = std::thread([this, command, directory, environment]()
         {
             std::cout << command << "\n";
             consoleOutCb_(command + "\n");
 
+            isRunning_ = true;
             process_ = std::make_unique <TinyProcessLib::Process> (
                 command,
                 environment,
@@ -63,7 +65,13 @@ namespace MinIDE
             consoleOutCb_(exitMessage);
             processEndedCb_(exitStatus);
             std::cout << exitMessage << "\n";
+            isRunning_ = false;
         });
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    bool AsyncProcess::isRunning() const
+    {
+        return isRunning_;
     }
 //---------------------------------------------------------------------------------------------------------------------
     void AsyncProcess::kill()

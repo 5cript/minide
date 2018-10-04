@@ -10,17 +10,23 @@ namespace MinIDE::ProjectPersistence
         std::string environment,
         std::string toolProfile,
         std::optional <std::string> executable,
+        std::optional <std::string> arguments,
         bool isDebugable,
-        std::optional <DebuggerSettings> debuggerSettings
+        std::optional <DebuggerSettings> debuggerSettings,
+        std::optional <std::string> executionDirectory,
+        bool executionDirectoryIsRelative
     )
-        : name{name}
-        , outputPath{outputPath}
+        : name{std::move(name)}
+        , outputPath{std::move(outputPath)}
         , outputIsRelative{outputIsRelative}
-        , environment{environment}
-        , toolProfile{toolProfile}
-        , executable{executable}
+        , environment{std::move(environment)}
+        , toolProfile{std::move(toolProfile)}
+        , executable{std::move(executable)}
+        , arguments{std::move(arguments)}
         , isDebugable{isDebugable}
-        , debuggerSettings{debuggerSettings}
+        , debuggerSettings{std::move(debuggerSettings)}
+        , executionDirectory{std::move(executionDirectory)}
+        , executionDirectoryIsRelative{executionDirectoryIsRelative}
     {
 
     }
