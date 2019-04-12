@@ -17,9 +17,26 @@ namespace MinIDE::Scripting::Api
         lua.script(script());
 
         auto getParameters = lua["getParameters"];
-        auto retVal = getParameters();
+        sol::table retVal = getParameters();
 
-        return {};
+        Parameters params;
+        for (auto const& [key, value] : retVal)
+        {
+            params[key.as <std::string>()] =
+            {
+                key.as <std::string>(),
+                value.as <std::string>(),
+                ""
+            };
+        }
+
+        sol::table descriptions = lua["getDescriptions"]();
+        for (auto const& [key, value] : retVal)
+        {
+            params[key.as <std::string>()].description = value.as <std::string>();
+        }
+
+        return params;
     }
 //---------------------------------------------------------------------------------------------------------------------
 //#####################################################################################################################

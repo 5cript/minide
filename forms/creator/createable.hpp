@@ -26,7 +26,10 @@ namespace MinIDE
         std::string catenated() const;
         Scripting::Script const& script() const;
 
-        void startWizard();
+        /**
+         *  Returns true if something was created.
+         **/
+        bool startWizard();
 
     private:
         std::string name_;
