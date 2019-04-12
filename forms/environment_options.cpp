@@ -1,6 +1,8 @@
 #include "environment_options.hpp"
 #include "environment_options/listbox_inline.hpp"
 
+#include "../resources.hpp"
+
 #include <nana/gui/place.hpp>
 #include <nana/gui/widgets/listbox.hpp>
 #include <nana/gui/widgets/label.hpp>
@@ -268,7 +270,7 @@ namespace MinIDE
         layout.field("PathLabel") << elements_->pathLabel;
         layout.field("PathBox") << elements_->pathBox;
 
-        layout.div(layoutString);
+        layout.div(loadResource("layouts/environment_options.layout"));
         if (elements_->noProfiles)
             layout.field_display("ProfileChooserPane", false);
         layout.collocate();

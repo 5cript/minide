@@ -1,5 +1,7 @@
 #include "tool_options.hpp"
 
+#include "../resources.hpp"
+
 #include <nana/gui/place.hpp>
 #include <nana/gui/widgets/label.hpp>
 #include <nana/gui/widgets/textbox.hpp>
@@ -91,7 +93,7 @@ namespace MinIDE
         layout.field("ShellLabel") << elements_->shellLabel;
         layout.field("ShellBox") << elements_->shellBox;
 
-        layout.div(layoutString);
+        layout.div(loadResource("layouts/tool_options.layout"));
         layout.collocate();
     }
 //---------------------------------------------------------------------------------------------------------------------

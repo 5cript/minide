@@ -1,5 +1,7 @@
 #include "cmake_target_creator.hpp"
 
+#include "../resources.hpp"
+
 #include <nana/gui/widgets/combox.hpp>
 #include <nana/gui/widgets/label.hpp>
 #include <nana/gui/widgets/textbox.hpp>
@@ -307,7 +309,7 @@ namespace MinIDE
         layout.field("Ok") << elements_->okBtn;
         layout.field("Cancel") << elements_->cancelBtn;
 
-        layout.div(layoutString);
+        layout.div(loadResource("layouts/cmake_target_creator.layout"));
         layout.collocate();
     }
 //---------------------------------------------------------------------------------------------------------------------

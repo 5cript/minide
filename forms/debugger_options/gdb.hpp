@@ -12,11 +12,6 @@ namespace MinIDE::DebuggerOptionFrames
     class GdbFrame : public nana::panel <true>
     {
     public:
-        constexpr static const char* layoutString =
-            #include "../layouts/debugger_option_frames/gdb.layout"
-        ;
-
-    public:
         GdbFrame(nana::window parent, DebuggerSettings* settings);
         ~GdbFrame();
 

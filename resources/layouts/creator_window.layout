@@ -1,0 +1,16 @@
+<vertical
+	<
+		<Selector>
+		|
+		<Description weight=200>
+	>
+	<weight=28
+		<margin=3
+			<>
+			<OkButton max=100>
+			<weight=3>
+			<CancelButton max=100>
+			<>
+		>
+	>
+>

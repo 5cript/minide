@@ -17,11 +17,6 @@ namespace MinIDE
     class CMakeTargetCreator
     {
     public:
-        constexpr static const char* layoutString =
-            #include "layouts/cmake_target_creator.layout"
-        ;
-
-    public:
         CMakeTargetCreator(nana::window owner, GlobalPersistence* settings);
         ~CMakeTargetCreator();
 

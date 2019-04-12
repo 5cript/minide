@@ -6,29 +6,17 @@
 #include "../async_process.hpp"
 #include "../copyability.hpp"
 #include "project_file/cmake_build_profile.hpp"
+#include "debugger/gdb.hpp"
 
 namespace MinIDE
 {
     class CMakeProject;
     struct CMakeProjectImpl;
 
-    struct DebugCommands
-    {
-        void step();
-        void nextLine();
-        void stepInto();
-        void stepOut();
-        void nextInstruction();
-        void stepIntoInstruction();
-
-        CMakeProject* project;
-    };
-
     class CMakeProject : public Project
     {
     public:
         NONCOPY(CMakeProject);
-        friend DebugCommands;
 
     public:
         /**
@@ -78,16 +66,12 @@ namespace MinIDE
         std::string type() const;
 
         /**
-         *  A proxy to contain more commands for debugging.
-         *  @throw If not debugging
-         */
-        DebugCommands debugCommands();
-
-        /**
          *  Add a build target.
          */
         void addTarget(ProjectPersistence::CMakeBuildProfile const& target);
         ProjectPersistence::CMakeBuildProfile* getTarget(std::string const& target) override;
+
+        GdbCommunicator& debugger();
 
     private:
         void runExternal(std::string const& command, std::string const& outputPipe, ProjectPersistence::CMakeBuildProfile* target);

@@ -201,5 +201,23 @@ namespace MinIDE
     {
         return impl_->isRunning;
     }
+//---------------------------------------------------------------------------------------------------------------------
+    void GdbCommunicator::sendCommand(GdbInterface::MiCommand const& command)
+    {
+        if (impl_->isRunning)
+            impl_->gdb->sendCommand(command);
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void GdbCommunicator::toggleBreakpoint(path const& file, int line)
+    {
+        GdbInterface::MiCommand command{"-break-insert"};
+        command.param(file.string() + ":" + std::to_string(line));
+        impl_->gdb->sendCommand(command);
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    void GdbCommunicator::step()
+    {
+
+    }
 //#####################################################################################################################
 }

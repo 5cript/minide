@@ -3,6 +3,7 @@
 #include "main_window/log_tabs.hpp"
 #include "main_window/project_tree_renderer.hpp"
 #include "main_window/toolbar.hpp"
+#include "../gui_utility/show_message.hpp"
 
 // Project
 #include "../workspace/cmake_project.hpp"
@@ -11,12 +12,14 @@
 #include "../workspace/workspace.hpp"
 #include "../global_settings/build_base_settings.hpp"
 #include "../workspace/project_file/cmake_build_profile.hpp"
+#include "../resources.hpp"
 
 // Other GUIs
 #include "environment_options.hpp"
 #include "tool_options.hpp"
 #include "cmake_target_creator.hpp"
 #include "debugger_options.hpp"
+#include "creator.hpp"
 
 // Widgets
 #include <nana/gui/msgbox.hpp>
@@ -98,12 +101,27 @@ namespace MinIDE
         registerTreeEvents();
         populateToolbar();
         setupToolbarEvents();
+
+        elements_->editor.sidepanelClickEvent.connect(
+            [this](path const& file, int line, nana::arg_mouse keyState){
+                auto* activeProject = elements_->workspace.activeProject();
+                if (!activeProject)
+                    return;
+                auto* cmakeProject = dynamic_cast <CMakeProject*> (activeProject);
+                if (!cmakeProject)
+                    return;
+
+                if (keyState.left_button)
+                    cmakeProject->debugger().toggleBreakpoint(file, line);
+            }
+        );
     }
 //---------------------------------------------------------------------------------------------------------------------
     void MainWindow::populateToolbar()
     {
         MinIDE::populateToolbar(elements_->toolbar);
     }
+//---------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------
     void MainWindow::setLayout()
     {
@@ -116,7 +134,7 @@ namespace MinIDE
         layout.field("TargetSelector") << elements_->targetSelector;
         layout.field("ProjectSelector") << elements_->activeProject;
 
-        layout.div(layoutString);
+        layout.div(loadResource("layouts/main_window.layout"));
         layout.collocate();
     }
 //---------------------------------------------------------------------------------------------------------------------
@@ -166,6 +184,34 @@ namespace MinIDE
                 for (; !item.empty(); item = item.owner())
                     item.expand(true);
                 refreshProjectSelector();
+            }
+        });
+        menu.at(File).append("New Project", [this](auto& item)
+        {
+            Creator creator(elements_->form,
+            {
+                {
+                    "CMake Project",
+                    "A CMake project with a freshly created CMakeLists.txt. Either with a wizard, or empty.",
+                    loadResource("scripts/wizards/cmake_wizard.lua"),
+                    "resources/images/toolbar/cmake.png"
+                }
+            });
+
+            auto selected = creator.show();
+            if (!selected)
+                return;
+            else
+            {
+                try
+                {
+                    std::cout << selected.value().name();
+                    selected.value().startWizard();
+                }
+                catch (std::exception const& exc)
+                {
+                    showError(exc.what());
+                }
             }
         });
 
@@ -528,7 +574,7 @@ namespace MinIDE
                             if (!cmakeProject->isDebugging())
                                 cmakeProject->runDebug(elements_->targetSelector.caption(), "Default"); // RUN DEBUG
                             else
-                                cmakeProject->debugCommands().step();
+                                cmakeProject->debugger().step();
                             deactivateButtons();
                         }
                     }

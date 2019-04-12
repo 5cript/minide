@@ -12,11 +12,6 @@ namespace MinIDE
     class EnvironmentOptions
     {
     public:
-        constexpr static const char* layoutString =
-            #include "layouts/environment_options.layout"
-        ;
-
-    public:
         EnvironmentOptions(
             nana::window owner,
             std::unordered_map <std::string, Environment>* environments,

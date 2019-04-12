@@ -12,11 +12,6 @@ namespace MinIDE::DebuggerOptionFrames
     class GeneralFrame : public nana::panel <true>
     {
     public:
-        constexpr static const char* layoutString =
-            #include "../layouts/debugger_option_frames/general.layout"
-        ;
-
-    public:
         GeneralFrame(nana::window parent, DebuggerSettings* settings);
         ~GeneralFrame();
 

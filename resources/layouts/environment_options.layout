@@ -1,4 +1,3 @@
-R"(
 <vertical
 	<ProfileChooserPane margin=5 max=35
 		<ProfileComboBox weight=70%><weight=5><<AddProfileButton><weight=5><RemoveProfileButton>>
@@ -22,4 +21,3 @@ R"(
 		>
 	>
 >
-)"

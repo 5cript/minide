@@ -2,6 +2,8 @@
 #include "debugger_options/general.hpp"
 #include "debugger_options/gdb.hpp"
 
+#include "../resources.hpp"
+
 #include <nana/gui/place.hpp>
 #include <nana/gui/widgets/label.hpp>
 #include <nana/gui/widgets/textbox.hpp>
@@ -107,7 +109,7 @@ namespace MinIDE
         layout.field("ChildFrames").fasten(elements_->generalOptions)
                                    .fasten(elements_->gdbOptions);
 
-        layout.div(layoutString);
+        layout.div(loadResource("layouts/debugger_options.layout"));
         layout.collocate();
     }
 //---------------------------------------------------------------------------------------------------------------------

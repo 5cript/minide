@@ -11,11 +11,6 @@ namespace MinIDE
     class DebuggerOptions
     {
     public:
-        constexpr static const char* layoutString =
-            #include "layouts/debugger_options.layout"
-        ;
-
-    public:
         DebuggerOptions(
             nana::window owner,
             std::unordered_map <std::string, DebuggerSettings>* settings,

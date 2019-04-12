@@ -1,5 +1,7 @@
 #include "general.hpp"
 
+#include "../../resources.hpp"
+
 #include <nana/gui/place.hpp>
 #include <nana/gui/widgets/label.hpp>
 #include <nana/gui/widgets/textbox.hpp>
@@ -69,7 +71,7 @@ namespace MinIDE::DebuggerOptionFrames
         layout.field("WatchLocal") << elements_->watchLocal;
         layout.field("WatchFunctionArgs") << elements_->watchFunctionArgs;
 
-        layout.div(layoutString);
+        layout.div(loadResource("layouts/debugger_option_frames/general.layout"));
         layout.collocate();
     }
 //---------------------------------------------------------------------------------------------------------------------

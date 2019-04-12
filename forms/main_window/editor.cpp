@@ -2,6 +2,8 @@
 
 #include "editor_file_store.hpp"
 
+#include "../../resources.hpp"
+
 #include <nana/gui/widgets/tabbar.hpp>
 #include <nana/gui/widgets/textbox.hpp>
 #include <nana/gui/place.hpp>
@@ -108,7 +110,7 @@ namespace MinIDE
 
         applyCppScheme(elements_->textbox);
     }
-//-------------------------------text_extent_size--------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------
     void Editor::save()
     {
         elements_->fileStore.selected().data(elements_->textbox.caption());
@@ -200,7 +202,7 @@ namespace MinIDE
 //---------------------------------------------------------------------------------------------------------------------
     void Editor::setLayout()
     {
-        elements_->layout.div(layoutString);
+        elements_->layout.div(loadResource("layouts/main_window/editor.layout"));
         elements_->layout["lines"] << elements_->lineNumbers;
         elements_->layout["tabbar"] << elements_->tabs;
         elements_->layout["editor"] << elements_->textbox;
@@ -272,6 +274,9 @@ namespace MinIDE
     void Editor::registerNumberPaneEvents()
     {
         elements_->lineNumbers.events().click([this](auto const& event) {
+            if (elements_->fileStore.empty())
+                return;
+
             auto const& textbox = elements_->textbox;
 
             auto linePx = textbox.line_pixels();
@@ -279,9 +284,12 @@ namespace MinIDE
                 std::cout << "[INVALID]\n";
 
             auto line = 1 + (event.mouse_args->pos.y + textbox.content_origin().y) / linePx;
-            auto file = elements_->fileStore.selected().file().string();
+            auto file = elements_->fileStore.selected().file();
 
-            std::cout << "breakpoint toggle in " << file << "[" << line << "]" << "\n";
+            //elements_->sideBarEvent(file, line, 0);
+            sidepanelClickEvent(file, line, *event.mouse_args);
+
+            std::cout << "breakpoint toggle in " << file.string() << "[" << line << "]" << "\n";
         });
     }
 //#####################################################################################################################

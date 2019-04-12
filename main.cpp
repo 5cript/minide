@@ -1,10 +1,13 @@
 #include "forms/main_window.hpp"
 #include "global_settings/global_persistence.hpp"
+#include "resources.hpp"
 
 #include <iostream>
 #include <nana/gui.hpp>
 
-int main()
+void initializePython(char** argv);
+
+int main(int argc, char** argv)
 {
     using namespace MinIDE;
     GlobalPersistence globalSettings;

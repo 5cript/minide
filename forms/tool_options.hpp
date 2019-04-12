@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../global_settings/global_persistence.hpp"
+
 #include <nana/gui/widgets/form.hpp>
 #include <memory>
 
@@ -10,11 +11,6 @@ namespace MinIDE
 
     class ToolOptions
     {
-    public:
-        constexpr static const char* layoutString =
-            #include "layouts/tool_options.layout"
-        ;
-
     public:
         ToolOptions(nana::window owner, GlobalPersistence* settings);
         ~ToolOptions();

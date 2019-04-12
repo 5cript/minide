@@ -5,8 +5,11 @@
 #include "../../theme.hpp"
 #include "highlighting.hpp"
 
+#include "../../signals.hpp"
+
 #include <nana/gui/widgets/panel.hpp>
 #include <memory>
+#include <functional>
 
 namespace MinIDE
 {
@@ -30,6 +33,9 @@ namespace MinIDE
         void focusTextbox();
         void save();
         void saveAll();
+
+    public: // SIGNALS
+        sig2::signal<void(path const&, int, nana::arg_mouse const&)> sidepanelClickEvent;
 
     private:
         void setLayout();

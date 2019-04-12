@@ -1,6 +1,7 @@
 #include "gdb.hpp"
 
 #include "../environment_options.hpp"
+#include "../../resources.hpp"
 
 #include <nana/gui/place.hpp>
 #include <nana/gui/widgets/label.hpp>
@@ -143,7 +144,7 @@ namespace MinIDE::DebuggerOptionFrames
         layout.field("EnvironmentOverwrites") << elements_->environmentOverwrites;
         layout.field("ChangeEnvironment") << elements_->changeEnvironment;
 
-        layout.div(layoutString);
+        layout.div(loadResource("layouts/debugger_option_frames/gdb.layout"));
         layout.collocate();
     }
 //---------------------------------------------------------------------------------------------------------------------

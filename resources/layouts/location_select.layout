@@ -1,0 +1,15 @@
+<vertical
+	<vertical
+		<LocationBox weight=30>
+		<<DialogPopper max=100> <>>
+	>
+	<weight=28
+		<margin=3
+			<>
+			<OkButton max=100>
+			<weight=3>
+			<CancelButton max=100>
+			<>
+		>
+	>
+>

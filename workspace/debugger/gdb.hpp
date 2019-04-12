@@ -8,8 +8,10 @@
 #include "../../event_manager.hpp"
 #include "../project_events.hpp"
 #include "../../filesystem.hpp"
+#include "../../signals.hpp"
 
 #include <gdb-interface/gdb_interface.hpp>
+#include <gdb-interface/commands/mi_command.hpp>
 
 #include <memory>
 
@@ -36,14 +38,43 @@ namespace MinIDE
             Environment const& targetEnvironment
         );
 
+        /**
+         *  Send exit command to gdb for a gentle stop.
+         */
         void stop();
+
+        /**
+         *  Kill the gdb process.
+         */
         void kill();
 
-        /// returns whether stop was called.
+        /**
+         *  returns whether stop was called.
+         */
         bool wasStopped() const noexcept;
 
-        /// returns whether gdb is running.
+        /**
+         *  returns whether gdb is running.
+         */
         bool isRunning() const noexcept;
+
+        /**
+         *  Do not use directly.
+         */
+        void sendCommand(GdbInterface::MiCommand const& command);
+
+        /**
+         *  Set/Unset breakpoint in file:line.
+         */
+        void toggleBreakpoint(path const& file, int line);
+
+        /**
+         *  Continue Debugging. (calling it step, because continue is a keyword).
+         */
+        void step();
+
+    public: // SIGNALS
+        sig2::signal <void(path const& file, int line)> onBreakpointSet;
 
     private:
         std::unique_ptr <GdbImpl> impl_;

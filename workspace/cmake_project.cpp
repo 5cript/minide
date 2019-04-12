@@ -2,7 +2,8 @@
 #include "project_impl.hpp"
 #include "globber.hpp"
 #include "project_file/local.hpp"
-#include "debugger/gdb.hpp"
+
+#include <gdb-interface/commands/mi_command.hpp>
 
 #include <boost/range/iterator_range.hpp>
 #include <iostream>
@@ -29,36 +30,6 @@ namespace MinIDE
         }
     };
 //#####################################################################################################################
-    void DebugCommands::step()
-    {
-        //project->cmakeImpl_->gdb.step();
-    }
-//---------------------------------------------------------------------------------------------------------------------
-    void DebugCommands::nextLine()
-    {
-
-    }
-//---------------------------------------------------------------------------------------------------------------------
-    void DebugCommands::stepInto()
-    {
-
-    }
-//---------------------------------------------------------------------------------------------------------------------
-    void DebugCommands::stepOut()
-    {
-
-    }
-//---------------------------------------------------------------------------------------------------------------------
-    void DebugCommands::nextInstruction()
-    {
-
-    }
-//---------------------------------------------------------------------------------------------------------------------
-    void DebugCommands::stepIntoInstruction()
-    {
-
-    }
-//#####################################################################################################################
     CMakeProject::CMakeProject(GlobalPersistence* settings, path const& rootDir)
         : Project{settings}
         , cmakeImpl_{new CMakeProjectImpl(*this, settings)}
@@ -81,8 +52,6 @@ namespace MinIDE
             impl_->settings->cmakeBaseSettings.globbing.masks,
             impl_->settings->cmakeBaseSettings.globbing.dirBlacklist
         );
-
-        //_putenv(("PATH="s + environment_->path).c_str());
     }
 //---------------------------------------------------------------------------------------------------------------------
     std::string CMakeProject::type() const
@@ -153,6 +122,11 @@ namespace MinIDE
                 //cmakeImpl_->process.reset(nullptr);
             }
         );
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    GdbCommunicator& CMakeProject::debugger()
+    {
+        return cmakeImpl_->gdb;
     }
 //---------------------------------------------------------------------------------------------------------------------
     void CMakeProject::killProcess()
@@ -257,11 +231,6 @@ namespace MinIDE
     bool CMakeProject::isDebugging() const
     {
         return cmakeImpl_->gdb.isRunning();
-    }
-//---------------------------------------------------------------------------------------------------------------------
-    DebugCommands CMakeProject::debugCommands()
-    {
-        return DebugCommands{this};
     }
 //#####################################################################################################################
 }

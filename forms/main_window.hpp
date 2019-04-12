@@ -12,11 +12,6 @@ namespace MinIDE
     class MainWindow
     {
     public:
-        constexpr static const char* layoutString =
-            #include "layouts/main_window.layout"
-        ;
-
-    public:
         MainWindow(GlobalPersistence* globalSettings);
         ~MainWindow();
 
