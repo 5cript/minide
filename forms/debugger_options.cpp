@@ -70,6 +70,8 @@ namespace MinIDE
     {
         tabBar.append("General", generalOptions);
         tabBar.append("GDB", gdbOptions);
+
+        form.caption("Debugger Settings");
     }
 //#####################################################################################################################
     DebuggerOptions::DebuggerOptions(

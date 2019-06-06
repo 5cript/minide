@@ -12,6 +12,11 @@ namespace MinIDE
     std::string loadResource(path const& file);
 
     /**
+     *  Does not load a resource but creates a path relative to the resource directory and returns it.
+     */
+    path resource(path const& file);
+
+    /**
      *  Returns an absolute path to the resources dir.
      */
     path getResourcesDirectory();

@@ -75,6 +75,7 @@ namespace MinIDE
         , dirty{false}
         , noProfiles{noProfiles}
     {
+        form.caption("Environment Variables");
     }
 //#####################################################################################################################
     EnvironmentOptions::EnvironmentOptions(

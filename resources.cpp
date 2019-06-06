@@ -23,9 +23,14 @@ namespace MinIDE
         return res;
     }
 //---------------------------------------------------------------------------------------------------------------------
+    path resource(path const& file)
+    {
+        return getResourcesDirectory() / file;
+    }
+//---------------------------------------------------------------------------------------------------------------------
     std::string loadResource(path const& file)
     {
-        auto res = getResourcesDirectory() / file;
+        auto res = resource(file);
         std::ifstream reader{res, std::ios_base::binary};
         std::stringstream buffer;
         buffer << reader.rdbuf();

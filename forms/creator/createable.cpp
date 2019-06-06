@@ -1,21 +1,106 @@
 #include "createable.hpp"
 #include "../../scripting_engine/api/wizard.hpp"
+#include "../../resources.hpp"
 
 #include <nana/gui/widgets/form.hpp>
 #include <nana/gui/place.hpp>
+#include <nana/gui/widgets/group.hpp>
 #include <nana/gui/widgets/label.hpp>
 #include <nana/gui/widgets/textbox.hpp>
 #include <nana/gui/widgets/button.hpp>
+#include <nana/paint/graphics.hpp>
+#include <nana/gui/filebox.hpp>
+#include <nana/gui.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <fmt/core.h>
 
+#include <optional>
 #include <string>
 #include <vector>
 #include <iostream>
+#include <algorithm>
+#include <stdexcept>
+
+#define WIZARD_PARAM_DECONSTRUCT auto& [id, prettyName, value, description, isOptional, orderHint]
 
 namespace MinIDE
 {
+//#####################################################################################################################
+    namespace
+    {
+        struct WizardState
+        {
+            MinIDE::Scripting::Api::Wizard const* wizard;
+            MinIDE::Scripting::Api::Wizard::Parameters parameters;
+            nana::group* group;
+        };
+
+        void constructParameterPanel(WizardState& state)
+        {
+            state.parameters = state.wizard->retrieveParameters();
+
+            std::string layoutString = "<vertical <vertical margin=3 <weight=5>\n";
+
+            int maxExtent = 0;
+            for (auto const& [key, param] : state.parameters)
+            {
+                WIZARD_PARAM_DECONSTRUCT = param;
+
+                nana::paint::graphics graph{nana::size{1,1}};
+                graph.typeface(nana::paint::font("Tahoma", 11));
+                nana::size ext = graph.text_extent_size(prettyName.c_str());
+
+                maxExtent = std::max(static_cast <int> (ext.width), maxExtent);
+            }
+
+            std::vector <MinIDE::Scripting::Api::Wizard::Parameter*> orderedParams;
+            for (auto& [key, param] : state.parameters)
+            {
+                orderedParams.push_back(&param);
+            }
+            std::sort(std::begin(orderedParams), std::end(orderedParams), [](auto const& lhs, auto const& rhs)
+            {
+                return lhs->orderHint < rhs->orderHint;
+            });
+
+            for (auto& param : orderedParams)
+            {
+                WIZARD_PARAM_DECONSTRUCT = *param;
+
+                auto* lbl = state.group->create_child <nana::label>((id + "_LABEL").c_str());
+                auto* box = state.group->create_child <nana::textbox>(id.c_str());
+
+                box->caption(value);
+                lbl->caption(prettyName);
+
+                box->tip_string(description.c_str());
+                box->events().text_changed([&value](auto const& tb)
+                {
+                    value = tb.widget.caption();
+                });
+
+                layoutString += fmt::format(R"(
+                    <max=25
+                        <weight=5>
+                        <vertical max={1}
+                            <weight=3>
+                            <{0}_LABEL>
+                        >
+                        <{0}>
+                    >
+                    <weight=3>
+                )", id, std::to_string(maxExtent + 10));
+            }
+            layoutString += R"(
+                    >
+                >
+            )";
+
+            state.group->div(layoutString.c_str());
+            state.group->collocate();
+        }
+    }
 //#####################################################################################################################
     Creatable::Creatable(std::string name, std::string description, Scripting::Script script, std::optional <std::string> imageResource)
         : name_{std::move(name)}
@@ -82,60 +167,84 @@ namespace MinIDE
     {
         using namespace Scripting::Api;
 
+        WizardState state{};
         Wizard wizard{&script_};
-        auto parameters = wizard.retrieveParameters();
+        state.wizard = &wizard;
+
+        auto type = wizard.retrieveType();
+        if (type != "directory" && type != "file")
+        {
+            throw std::runtime_error ("unknown wizard type, expected 'directory' or 'file'");
+        }
 
         nana::form inputForm{nana::API::make_center(700, 450)};
         nana::place layout{inputForm};
         nana::button ok{inputForm, "Ok"};
         nana::button cancel{inputForm, "Cancel"};
+        nana::group scriptParameters{inputForm, "Wizard Parameters"};
+        state.group = &scriptParameters;
 
-        std::vector <std::unique_ptr <nana::textbox>> boxes;
-        std::vector <std::unique_ptr <nana::label>> labels;
+        nana::label fullPath{inputForm, "Full Path: "};
+        nana::textbox pathBox{inputForm};
+        nana::button pathChooserOpen{inputForm, "..."};
 
-        std::string layoutString = "<vertical <vertical margin=3\n";
-        for (auto& [key, param] : parameters)
-        {
-            auto& [id, value, description] = param;
-            std::unique_ptr <nana::textbox> box{new nana::textbox({inputForm, value})};
-            std::unique_ptr <nana::label> lbl{new nana::label(inputForm, id)};
+        inputForm.caption("Wizard");
 
-            box->events().text_changed([&value](auto const& tb)
-            {
-                value = tb.widget.caption();
-            });
-            boxes.push_back(std::move(box));
-            labels.push_back(std::move(lbl));
-
-            layout.field(id.c_str()) << *boxes.back();
-            layout.field((id + "_LABEL").c_str()) << *labels.back();
-
-            layoutString += fmt::format(R"(
-                <max=25
-                    <vertical max=100
-                        <weight=3>
-                        <{0}_LABEL>
-                    >
-                    <{0}>
-                >
-                <weight=3>
-            )", id);
-        }
-        layoutString += R"(
-                >
-                <max=30
-                    <>
-                    <OkButton max=120 margin=3>
-                    <CancelButton max=120 margin=3>
-                >
-            >
-        )";
+        constructParameterPanel(state);
 
         bool okayed{false};
-        ok.events().click([&okayed, &inputForm](auto const& btn)
+
+        pathChooserOpen.events().click([&type, &pathBox](auto const& btn)
         {
-            okayed = true;
-            inputForm.close();
+            if (type == "directory")
+            {
+                nana::folderbox picker;
+
+                auto paths = picker.show();
+                if (!paths.empty())
+                    pathBox.caption(paths.front().string());
+            }
+            else if (type == "file")
+            {
+                nana::filebox picker{nullptr, true};
+                picker.allow_multi_select(false);
+
+                auto paths = picker.show();
+                if (!paths.empty())
+                    pathBox.caption(paths.front().string());
+            }
+            //pathBox.caption()
+        });
+
+        ok.events().click([&okayed, &inputForm, &pathBox](auto const& btn)
+        {
+            // Todo: check if all non-optionals are set.
+            // Todo: check if path is set to something ok.
+
+            if (pathBox.caption().empty())
+            {
+                nana::msgbox mb(inputForm, "Error", nana::msgbox::ok);
+                mb << "The path to create the project/file at may not be empty";
+                mb.show();
+                return;
+            }
+
+            path root{pathBox.caption()};
+
+            bool canceled;
+            if (filesystem::is_directory(root) && !filesystem::is_empty(root))
+            {
+                nana::msgbox mb(inputForm, "Warning", nana::msgbox::yes_no);
+                mb.icon(mb.icon_question);
+                mb << L"The directory is not empty, do you want to continue anyway?";
+                canceled = (mb.show() != nana::msgbox::pick_yes);
+            }
+
+            if (!canceled)
+            {
+                okayed = true;
+                inputForm.close();
+            }
         });
 
         cancel.events().click([&okayed, &inputForm](auto const& btn)
@@ -144,25 +253,28 @@ namespace MinIDE
             inputForm.close();
         });
 
+        inputForm.size({700u, static_cast <unsigned int> (state.parameters.size()) * 28 + 30 + 80});
+
         layout["OkButton"] << ok;
         layout["CancelButton"] << cancel;
+        layout["ScriptParameters"] << scriptParameters;
+        layout["FullPathLabel"] << fullPath;
+        layout["PathBox"] << pathBox;
+        layout["DialogOpener"] << pathChooserOpen;
 
-        layout.div(layoutString);
+        layout.div(loadResource("layouts/wizard_window.layout"));
         layout.collocate();
-
-        inputForm.size({700u, static_cast <unsigned int> (parameters.size()) * 28 + 30 + 50});
-
         nana::API::modal_window(inputForm);
         inputForm.show();
+
+        // And now for the magic :D!
 
         if (!okayed)
             return false;
 
-        for (auto& [key, param] : parameters)
-        {
-            auto& [id, value, description] = param;
-            std::cout << value << "\n";
-        }
+        path root{pathBox.caption()};
+
+        auto creas= wizard.runWizard(state.parameters, root);
 
         return true;
     }

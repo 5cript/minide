@@ -162,9 +162,11 @@ namespace MinIDE
         {
             nana::filebox fb(elements_->form, true);
             fb.add_filter("MinIDE Workspace", "*.midews");
-            if (fb())
+            auto files = fb.show();
+            if (!files.empty())
             {
-                elements_->workspace.loadWorkspace(fb.file());
+                auto file = files.front();
+                elements_->workspace.loadWorkspace(file.string());
                 reloadProjectTree();
                 refreshProjectSelector();
             }
@@ -173,10 +175,12 @@ namespace MinIDE
         {
             nana::filebox fb(elements_->form, true);
             fb.add_filter("CMakeLists", "CMakeLists.txt");
-            if (fb())
+            auto files = fb.show();
+            if (!files.empty())
             {
+                auto file = files.front();
                 elements_->workspace.loadWorkspace();
-                auto* project = elements_->workspace.addProject(filesystem::path{fb.file()}.parent_path());
+                auto* project = elements_->workspace.addProject(filesystem::path{file.string()}.parent_path());
                 if (project == nullptr)
                     return;
                 reloadProjectTree();
@@ -194,7 +198,7 @@ namespace MinIDE
                     "CMake Project",
                     "A CMake project with a freshly created CMakeLists.txt. Either with a wizard, or empty.",
                     loadResource("scripts/wizards/cmake_wizard.lua"),
-                    "resources/images/toolbar/cmake.png"
+                    resource("images/toolbar/cmake.png").string()
                 }
             });
 

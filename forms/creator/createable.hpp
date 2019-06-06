@@ -10,6 +10,13 @@ namespace MinIDE
     class Creatable
     {
     public:
+        enum class WantsToCreate
+        {
+            File,
+            Folder
+        };
+
+    public:
         Creatable() = default;
         ~Creatable() = default;
         Creatable(std::string name, std::string description, Scripting::Script script, std::optional <std::string> imageResource);

@@ -1,0 +1,13 @@
+<vertical margin=5
+	<weight=3>
+	<max=25
+		<weight=3>
+		<vertical max=100 <weight=3> FullPathLabel> <PathBox> <weight=3> <max=30 DialogOpener>
+		<weight=3>
+	>
+	<<weight=3><ScriptParameters><weight=3>>
+	<weight=3>
+	<max=30 margin=3
+		<><max=80 OkButton> <weight=3> <max=80 CancelButton>
+	>
+>

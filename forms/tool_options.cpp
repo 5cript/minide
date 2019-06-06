@@ -59,6 +59,7 @@ namespace MinIDE
         , dirty{false}
         , lastSelectedProfile{}
     {
+        form.caption("Tooling");
     }
 //#####################################################################################################################
     ToolOptions::ToolOptions(nana::window owner, GlobalPersistence* settings)

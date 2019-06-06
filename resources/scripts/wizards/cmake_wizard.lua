@@ -2,32 +2,91 @@ if debugging == nil then
     debugging = true
 end
 
-function getParameters()
-	return {
-        project_name = "MY_PROJECT",
-        cmake_required = "3.11",
-        cxx_standard = "17",
-        default_build_type = "Release",
-        is_library = false,
-        library_type = "STATIC",
-        binary_name = "",
-        debug_options = "-fexecptions -g -Wall -pedantic-errors -pedantic",
-        release_options = "-fexceptions -O3 -Wall -pedantic"	
+local wizardParameters = {
+	project_name = {
+		value = "",
+		isOptional = false,
+		prettyName = "Project Name",
+		description = "The name of the project",
+		orderHint = 0
+	},
+	cmake_required = {
+		value = "3.11",
+		isOptional = false,
+		prettyName = "CMake Minimum Version",
+		description = "The minimum required CMake version",
+		orderHint = 8
+	},
+	cxx_standard = {
+		value = "17",
+		isOptional = true,
+		prettyName = "Default C++ Standard",
+		description = "The default C++ standard for this project, empty = dont include default cxx standard",
+		orderHint = 7
+	},
+	default_build_type = {
+		value = "Release",
+		isOptional = true,
+		prettyName = "Default Build Type",
+		description = "Adds a section to set a default build type, empty = omit section",
+		orderHint = 4
+	},
+	is_library = {
+		value = false,
+		isOptional = false,
+		prettyName = "Is Library?",
+		description = "Generate Library? (or executable?)",
+		orderHint = 5
+	},
+	library_type = {
+		value = "",
+		isOptional = true,
+		prettyName = "Static/Shared",
+		description = "Leave empty if no lib. STATIC/SHARED",
+		orderHint = 6
+	},
+	binary_name = {
+		value = "",
+		isOptional = true,
+		prettyName = "Name of Binary",
+		description = "Specify name for binary output, leave empty if binary_name=project_name",
+		orderHint = 1
+	},
+	debug_options = {
+		value = "-fexecptions -g -Wall -pedantic-errors -pedantic",
+		isOptional = true,
+		prettyName = "Debug Build Options",
+		description = "Build options for debug build, empty = dont set",
+		orderHint = 2
+	},
+	release_options = {
+		value = "-fexceptions -O3 -Wall -pedantic",
+		isOptional = true,
+		prettyName = "Release Build Options",
+		description = "Build options for release build, empty = dont set",
+		orderHint = 3
 	}
+}
+
+function getParameters()
+	return wizardParameters
 end
 
-function getDescriptions()
-	return {
-        project_name = "The name of the project",
-        cmake_required = "The minimum required CMake version",
-        cxx_standard = "The default C++ standard for this project, 0 = dont include default cxx standard",
-        default_build_type = "Adds a section to set a default build type, empty = omit section",
-        is_library = "Generate Library? (or executable?)",
-        library_type = "Leave empty if no lib. STATIC/SHARED",
-        binary_name = "Specify name for binary output, leave empty if binary_name=project_name",
-        debug_options = "Build options for debug build, empty = dont set",
-        release_options = "Build options for release build, empty = dont set"
-    }
+local function extractValue(param)
+	return param.value
+end
+
+function extractValues(parameters)
+	local valueMap = {}
+	for key, value in pairs(parameters) do
+		valueMap[key] = value.value
+	end
+	return valueMap
+end
+
+-- types are: directory and file
+function getType()
+	return "directory"
 end
 
 function runWizard(parameters)
@@ -94,6 +153,9 @@ function runWizard(parameters)
 		file(GLOB sources "*.cpp")
 	]])
 
+	if parameters.library_type == "" then
+		parameters.library_type = wizardParameters.library_type
+	end
 	local addLibrary = substitute(parameters, [[
 		# Add Library
 		add_library(${project_name} ${library_type} ${${sources}})
@@ -150,9 +212,16 @@ function runWizard(parameters)
 			compilerOptionsRelease
 	end
 
-	return cmake
+	local result = {}
+	result[0] = {
+		name = "CMakeLists.txt",
+		content = cmake,
+		type = "file"
+	}
+
+	return result
 end
 
 if debugging then
-	print(runWizard(getParameters()))
+	print(runWizard(extractValues(getParameters()))[0].content)
 end
