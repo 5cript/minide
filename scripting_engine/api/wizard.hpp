@@ -47,7 +47,7 @@ namespace MinIDE::Scripting::Api
         /**
          *  Runs the wizard with the parameters and
          */
-        std::vector <Creation> runWizard(Parameters const& params, path const& root);
+        std::vector <Creation> runWizard(Parameters const& params);
     private:
     };
 }

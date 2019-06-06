@@ -193,6 +193,7 @@ namespace MinIDE
         constructParameterPanel(state);
 
         bool okayed{false};
+        path root{};
 
         pathChooserOpen.events().click([&type, &pathBox](auto const& btn)
         {
@@ -216,7 +217,7 @@ namespace MinIDE
             //pathBox.caption()
         });
 
-        ok.events().click([&okayed, &inputForm, &pathBox](auto const& btn)
+        ok.events().click([&okayed, &inputForm, &pathBox, &root](auto const& btn)
         {
             // Todo: check if all non-optionals are set.
             // Todo: check if path is set to something ok.
@@ -229,7 +230,7 @@ namespace MinIDE
                 return;
             }
 
-            path root{pathBox.caption()};
+            root = path{pathBox.caption()};
 
             bool canceled;
             if (filesystem::is_directory(root) && !filesystem::is_empty(root))
@@ -272,9 +273,28 @@ namespace MinIDE
         if (!okayed)
             return false;
 
-        path root{pathBox.caption()};
+        auto creas = wizard.runWizard(state.parameters);
 
-        auto creas= wizard.runWizard(state.parameters, root);
+        // Validate all paths
+        for (auto const& c : creas)
+            (void)jail(root, c.name);
+
+        if (type == "directory")
+        {
+            for (auto const& c : creas)
+            {
+                auto path = root / jail(root, c.name);
+                if (c.type == "directory")
+                {
+                    filesystem::create_directory(path);
+                }
+                else if (c.type == "file")
+                {
+                    std::ofstream writer{path, std::ios_base::binary};
+                    writer.write(c.content.c_str(), c.content.length());
+                }
+            }
+        }
 
         return true;
     }

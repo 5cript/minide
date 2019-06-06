@@ -212,6 +212,10 @@ namespace MinIDE
                     std::cout << selected.value().name();
                     selected.value().startWizard();
                 }
+                catch (jailbreak_error const& exc)
+                {
+                    showError(exc.what());
+                }
                 catch (std::exception const& exc)
                 {
                     showError(exc.what());

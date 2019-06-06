@@ -53,9 +53,8 @@ namespace MinIDE::Scripting::Api
         return result;
     }
 //---------------------------------------------------------------------------------------------------------------------
-    std::vector <Creation> Wizard::runWizard(Parameters const& params, path const& root)
+    std::vector <Wizard::Creation> Wizard::runWizard(Parameters const& params)
     {
-
         sol::state lua;
         commonStateSetup(lua);
         lua.open_libraries(sol::lib::table, sol::lib::math);
@@ -78,10 +77,9 @@ namespace MinIDE::Scripting::Api
         lua.script(script());
         sol::table creatables = lua["runWizard"](parameterTable);
 
-        std::vector <Creation> creas;
+        std::vector <std::pair <int, Creation>> creas;
         for (auto const& [index, value] : creatables)
         {
-            std::cout << index.as <int>() << "\n";
             sol::table crea = value;
 
             Creation c {
@@ -90,10 +88,17 @@ namespace MinIDE::Scripting::Api
                 crea["type"].get <std::string>()
             };
 
-            creas.push_back(c);
+            creas.push_back({index.as <int>(), c});
         }
+        std::sort(std::begin(creas), std::end(creas), [](auto const& lhs, auto const& rhs) {
+            return lhs.first < rhs.first;
+        });
 
-        return creas;
+        std::vector <Creation> unzipped;
+        for (auto const& c : creas) // now sorted
+            unzipped.push_back(c.second);
+
+        return unzipped;
     }
 //#####################################################################################################################
 }
