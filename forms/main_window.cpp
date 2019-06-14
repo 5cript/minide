@@ -149,6 +149,19 @@ namespace MinIDE
         */
     }
 //---------------------------------------------------------------------------------------------------------------------
+    void MainWindow::openProject(path const& directory)
+    {
+        elements_->workspace.loadWorkspace();
+        auto* project = elements_->workspace.addProject(directory);
+        if (project == nullptr)
+            return;
+        reloadProjectTree();
+        auto item = elements_->projectTree.find("workspace/"s + project->name());
+        for (; !item.empty(); item = item.owner())
+            item.expand(true);
+        refreshProjectSelector();
+    }
+//---------------------------------------------------------------------------------------------------------------------
     void MainWindow::setupMenu()
     {
         auto& menu = elements_->menu;
@@ -179,28 +192,12 @@ namespace MinIDE
             if (!files.empty())
             {
                 auto file = files.front();
-                elements_->workspace.loadWorkspace();
-                auto* project = elements_->workspace.addProject(filesystem::path{file.string()}.parent_path());
-                if (project == nullptr)
-                    return;
-                reloadProjectTree();
-                auto item = elements_->projectTree.find("workspace/"s + project->name());
-                for (; !item.empty(); item = item.owner())
-                    item.expand(true);
-                refreshProjectSelector();
+                openProject(filesystem::path{file.string()}.parent_path());
             }
         });
         menu.at(File).append("New Project", [this](auto& item)
         {
-            Creator creator(elements_->form,
-            {
-                {
-                    "CMake Project",
-                    "A CMake project with a freshly created CMakeLists.txt. Either with a wizard, or empty.",
-                    loadResource("scripts/wizards/cmake_wizard.lua"),
-                    resource("images/toolbar/cmake.png").string()
-                }
-            });
+            Creator creator(elements_->form, loadResource("wizards/projects.json"));
 
             auto selected = creator.show();
             if (!selected)
@@ -210,7 +207,9 @@ namespace MinIDE
                 try
                 {
                     std::cout << selected.value().name();
-                    selected.value().startWizard();
+                    auto path = selected.value().startWizard();
+                    if (path)
+                        openProject(path.value());
                 }
                 catch (jailbreak_error const& exc)
                 {

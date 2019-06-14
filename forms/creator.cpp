@@ -3,6 +3,8 @@
 
 #include "../resources.hpp"
 
+#include <SimpleJSON/parse/jsd_convenience.hpp>
+
 #include <nana/gui/widgets/form.hpp>
 #include <nana/gui/place.hpp>
 #include <nana/gui/widgets/listbox.hpp>
@@ -45,6 +47,8 @@ namespace MinIDE
         , layout{form}
         , selected{std::nullopt}
     {
+        form.caption("Creator");
+
         selector.append_header("Type");
         selector.at(0).inline_factory(0, nana::pat::make_factory<CreatableListElement>());
 
@@ -62,6 +66,23 @@ namespace MinIDE
     {
         setupLayout();
         setupEvents();
+    }
+//---------------------------------------------------------------------------------------------------------------------
+    Creator::Creator(nana::window owner, std::string const& creatableList)
+        : Creator(owner, [&creatableList](){
+            auto creas = JSON::make_from_json <SerializableCreatables>(creatableList);
+            std::vector <Creatable> creatables;
+            for (auto& elem : creas.creatables)
+            {
+                elem.script = loadResource(elem.script);
+                if (elem.image)
+                    elem.image = resource(elem.image.value()).string();
+                creatables.push_back(elem);
+            }
+            return creatables;
+        }())
+    {
+
     }
 //---------------------------------------------------------------------------------------------------------------------
     Creator::~Creator() = default;

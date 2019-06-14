@@ -1,12 +1,34 @@
 #pragma once
 
 #include "../../scripting_engine/script.hpp"
+#include "../../filesystem.hpp"
+
+#ifndef Q_MOC_RUN // A Qt workaround, for those of you who use Qt
+#   include <SimpleJSON/parse/jsd.hpp>
+#   include <SimpleJSON/stringify/jss.hpp>
+#   include <SimpleJSON/stringify/jss_fusion_adapted_struct.hpp>
+#endif
 
 #include <string>
 #include <optional>
 
 namespace MinIDE
 {
+    struct SerializableCreatable : public JSON::Stringifiable <SerializableCreatable>
+                                 , public JSON::Parsable <SerializableCreatable>
+    {
+        std::string name;
+        std::string description;
+        std::string script;
+        std::optional <std::string> image;
+    };
+
+    struct SerializableCreatables : public JSON::Stringifiable <SerializableCreatables>
+                                  , public JSON::Parsable <SerializableCreatables>
+    {
+        std::vector <SerializableCreatable> creatables;
+    };
+
     class Creatable
     {
     public:
@@ -20,6 +42,7 @@ namespace MinIDE
         Creatable() = default;
         ~Creatable() = default;
         Creatable(std::string name, std::string description, Scripting::Script script, std::optional <std::string> imageResource);
+        Creatable(SerializableCreatable const& seriCreate);
 
         static Creatable splitParse(std::string const& str);
 
@@ -34,9 +57,9 @@ namespace MinIDE
         Scripting::Script const& script() const;
 
         /**
-         *  Returns true if something was created.
+         *  Returns the path the project was created in on success.
          **/
-        bool startWizard();
+        std::optional <path> startWizard();
 
     private:
         std::string name_;
@@ -45,3 +68,15 @@ namespace MinIDE
         std::optional <std::string> imageResource_;
     };
 }
+
+BOOST_FUSION_ADAPT_STRUCT
+(
+    MinIDE::SerializableCreatable,
+    name, description, script, image
+)
+
+BOOST_FUSION_ADAPT_STRUCT
+(
+    MinIDE::SerializableCreatables,
+    creatables
+)

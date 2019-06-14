@@ -110,6 +110,15 @@ namespace MinIDE
     {
     }
 //---------------------------------------------------------------------------------------------------------------------
+    Creatable::Creatable(SerializableCreatable const& seriCreate)
+        : name_{seriCreate.name}
+        , description_{seriCreate.description}
+        , script_{seriCreate.script}
+        , imageResource_{seriCreate.image}
+    {
+
+    }
+//---------------------------------------------------------------------------------------------------------------------
     std::string Creatable::description() const
     {
         return description_;
@@ -163,7 +172,7 @@ namespace MinIDE
         return {};
     }
 //---------------------------------------------------------------------------------------------------------------------
-    bool Creatable::startWizard()
+    std::optional <path> Creatable::startWizard()
     {
         using namespace Scripting::Api;
 
@@ -217,17 +226,28 @@ namespace MinIDE
             //pathBox.caption()
         });
 
-        ok.events().click([&okayed, &inputForm, &pathBox, &root](auto const& btn)
+        ok.events().click([&okayed, &inputForm, &pathBox, &root, &state](auto const& btn)
         {
-            // Todo: check if all non-optionals are set.
-            // Todo: check if path is set to something ok.
-
+            // Check if set path is ok
             if (pathBox.caption().empty())
             {
                 nana::msgbox mb(inputForm, "Error", nana::msgbox::ok);
                 mb << "The path to create the project/file at may not be empty";
                 mb.show();
                 return;
+            }
+
+            // Check for non optionals
+            for ([[maybe_unused]] auto const& [key, param] : state.parameters)
+            {
+                if (!param.isOptional && param.defaultValue.empty())
+                {
+                    nana::msgbox mb(inputForm, "Error", nana::msgbox::ok);
+                    mb << "The parameter '" << param.prettyName << "' must not be empty.\n";
+                    mb << "Description of parameter: " << param.description;
+                    mb.show();
+                    return;
+                }
             }
 
             root = path{pathBox.caption()};
@@ -271,7 +291,7 @@ namespace MinIDE
         // And now for the magic :D!
 
         if (!okayed)
-            return false;
+            return std::nullopt;
 
         auto creas = wizard.runWizard(state.parameters);
 
@@ -290,13 +310,21 @@ namespace MinIDE
                 }
                 else if (c.type == "file")
                 {
+                    if (filesystem::exists(path))
+                    {
+                        nana::msgbox mb(inputForm, "Warning", nana::msgbox::yes_no);
+                        mb.icon(mb.icon_question);
+                        mb << "The file " << path.string() << " already exists! Overwrite?";
+                        if(mb.show() != nana::msgbox::pick_yes)
+                            continue;
+                    }
                     std::ofstream writer{path, std::ios_base::binary};
                     writer.write(c.content.c_str(), c.content.length());
                 }
             }
         }
 
-        return true;
+        return {root};
     }
 //#####################################################################################################################
 }

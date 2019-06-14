@@ -3,6 +3,8 @@
 #include "../global_settings/global_persistence.hpp"
 #include "../theme.hpp"
 
+#include "../filesystem.hpp"
+
 #include <memory>
 
 namespace MinIDE
@@ -28,10 +30,13 @@ namespace MinIDE
         void setupToolbarEvents();
         void refreshTargets();
         void refreshProjectSelector();
-        void setActiveProject(std::string const& name);
         void addTarget();
         void editTarget();
         void removeTarget();
+
+    private: // Project & Workspace Related
+        void setActiveProject(std::string const& name);
+        void openProject(path const& directory);
 
         /**
          *  @return Continue?

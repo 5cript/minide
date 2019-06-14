@@ -1,7 +1,7 @@
 #include "wizard.hpp"
 #include "../common_state_setup.hpp"
 
-#include <sol.hpp>
+#include <sol/sol.hpp>
 
 namespace MinIDE::Scripting::Api
 {
@@ -64,14 +64,13 @@ namespace MinIDE::Scripting::Api
         sol::table parameterTable = lua.create_table();
         for (auto const& [key, param] : params)
         {
-            sol::table parameter = lua.create_named_table(key,
-                "prettyName", param.prettyName,
-                "value", param.defaultValue,
-                "description", param.description,
-                "isOptional", param.isOptional,
-                "orderHint", param.orderHint
-            );
-            parameterTable.add(key, parameter);
+            sol::table parameter = lua.create_table();
+            parameter["prettyName"] = param.prettyName;
+            parameter["value"] = param.defaultValue;
+            parameter["description"] = param.description;
+            parameter["isOptional"] = param.isOptional;
+            parameter["orderHint"] = param.orderHint;
+            parameterTable[key] = parameter;
         }
 
         lua.script(script());
