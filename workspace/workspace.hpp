@@ -33,6 +33,8 @@ namespace MinIDE
 
         /**
          *  Get the active project.
+         *
+         *  @return nullptr if no active project
          */
         Project* activeProject();
 

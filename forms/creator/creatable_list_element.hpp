@@ -13,6 +13,9 @@ namespace MinIDE
     class CreatableListElement : public nana::listbox::inline_notifier_interface
     {
     public:
+        constexpr static int leftPadding = 15;
+
+    public:
         explicit CreatableListElement(int imageLabelPadding = 5, int imageBorderPadding = 3)
             : indicator_{nullptr}
             , pos_{}
@@ -28,7 +31,7 @@ namespace MinIDE
         {
             image_.create(wd);
             name_.create(wd);
-            image_.move(imageBorderPadding_, imageBorderPadding_);
+            image_.move(leftPadding + imageBorderPadding_, imageBorderPadding_);
 
             name_.caption("blalblalalala");
 
@@ -63,7 +66,7 @@ namespace MinIDE
             name_.size(nana::size{sz.width - sz.height - imageBorderPadding_ * 2 - imageLabelPadding_, sz.height});
 
             //name_.move(sz.height + imageBorderPadding_ * 2 + imageLabelPadding_, sz.height);
-            name_.move(image_.size().width + 2*imageBorderPadding_, imageBorderPadding_);
+            name_.move(leftPadding + image_.size().width + 2*imageBorderPadding_, imageBorderPadding_);
 
             // FIXME: static color.
             name_.bgcolor(nana::color{0,0,0,1.});

@@ -1,0 +1,53 @@
+{
+	"categories": {
+		"C++ Files": [
+			{
+				"name": "C++ Source",
+				"description": "A C++ source file",
+				"script": "scripts/wizards/files/cpp_source.lua",
+				"image": "images/wizard_icons/cpp_source.png"
+			},
+			{
+				"name": "C++ Header",
+				"description": "A C++ header file",
+				"script": "scripts/wizards/files/cpp_header.lua",
+				"image": "images/wizard_icons/cpp_header.png"
+			}
+		],
+		"C Files": [
+			{
+				"name": "C Source",
+				"description": "A C++ source file",
+				"script": "scripts/wizards/files/c_source.lua",
+				"image": "images/wizard_icons/c_source.png"
+			},
+			{
+				"name": "C Header",
+				"description": "A C++ header file",
+				"script": "scripts/wizards/files/c_header.lua",
+				"image": "images/wizard_icons/c_header.png"
+			}
+		],
+		"Scripts": [
+			{
+				"name": "Bash Script",
+				"description": "A bash script",
+				"script": "scripts/wizards/files/shell_script.lua",
+				"image": "images/wizard_icons/bash_icon.png"
+			},
+			{
+				"name": "Batch File",
+				"description": "A batch file",
+				"script": "scripts/wizards/files/bat_script.lua",
+				"image": "images/wizard_icons/bat_icon.png"
+			}
+		],
+		"Other": [
+			{
+				"name": "Empty File",
+				"description": "An empty file",
+				"script": "scripts/wizards/files/blank.lua"		
+			}
+		]
+	}
+}

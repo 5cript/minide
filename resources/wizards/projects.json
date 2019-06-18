@@ -1,16 +1,20 @@
 {
-	"creatables": [
-		{
-			"name": "CMake Project",
-			"description": "A CMake project with a freshly created CMakeLists.txt. Either with a wizard, or empty.",
-			"script": "scripts/wizards/cmake_wizard.lua",
-			"image": "images/toolbar/cmake.png"
-		},
-		{
-			"name": "Shell Script",
-			"description": "Just creates a single shell script project",
-			"script": "scripts/wizards/shell_wizard.lua",
-			"image": "images/other_icons/bash_icon.png"
-		}
-	]
+	"categories": {
+		"C++ Projects": [
+			{
+				"name": "CMake Project",
+				"description": "A CMake project with a freshly created CMakeLists.txt. Either with a wizard, or empty.",
+				"script": "scripts/wizards/projects/cmake_wizard.lua",
+				"image": "images/toolbar/cmake.png"
+			}
+		],
+		"Other": [
+			{
+				"name": "Shell Script",
+				"description": "Just creates a single shell script project",
+				"script": "scripts/wizards/projects/shell_wizard.lua",
+				"image": "images/wizard_icons/bash_icon.png"
+			}
+		]
+	}
 }

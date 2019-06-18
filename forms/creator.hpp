@@ -15,7 +15,7 @@ namespace MinIDE
     class Creator
     {
     public:
-        Creator(nana::window owner, std::vector <Creatable> creatables);
+        Creator(nana::window owner, std::unordered_map <std::string, std::vector <Creatable>> creatables);
         Creator(nana::window owner, std::string const& creatableList);
         ~Creator();
         std::optional <Creatable> show();

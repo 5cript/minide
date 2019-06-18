@@ -141,12 +141,15 @@ namespace MinIDE
 //---------------------------------------------------------------------------------------------------------------------
     std::string Creatable::catenated() const
     {
+        // 0 = name
+        // 1 = descr
+        // 2 = image
+
         std::string cat;
-        if (imageResource_)
-            cat = imageResource_.value() + ";";
         cat += name_ + ";";
         cat += description_ + ";";
-        cat += script_.script();
+        if (imageResource_)
+            cat += imageResource_.value();
 
         return cat;
     }
@@ -159,20 +162,24 @@ namespace MinIDE
         std::vector<std::string> strs;
         boost::split(strs, str, boost::is_any_of(";"));
 
-        if (strs.empty())
+        switch(strs.size())
+        {
+        case(0):
             return {};
-
-        if (strs.size() == 2)
+        case(1):
+            return {strs[0], strs[0], {}, std::nullopt};
+        case(2):
             return {strs[0], strs[1], {}, std::nullopt};
-        else if (strs.size() == 3)
-            return {strs[1], strs[2], {}, strs[0]};
-        else if (strs.size() == 4)
-            return {strs[1], strs[2], strs[3], strs[0]};
+        case(3):
+            return {strs[0], strs[1], {}, strs[2]};
+        default:
+            return {};
+        }
 
         return {};
     }
 //---------------------------------------------------------------------------------------------------------------------
-    std::optional <path> Creatable::startWizard()
+    std::optional <path> Creatable::startWizard(std::string const& initPath, std::string const& basePath)
     {
         using namespace Scripting::Api;
 
@@ -204,35 +211,72 @@ namespace MinIDE
         bool okayed{false};
         path root{};
 
-        pathChooserOpen.events().click([&type, &pathBox](auto const& btn)
+        pathChooserOpen.events().click([&type, &pathBox, &initPath, &wizard, &inputForm, &okayed](auto const& btn)
         {
             if (type == "directory")
             {
-                nana::folderbox picker;
+                if (!initPath.empty())
+                {
+                    nana::folderbox picker{nullptr, initPath};
 
-                auto paths = picker.show();
-                if (!paths.empty())
-                    pathBox.caption(paths.front().string());
+                    auto paths = picker.show();
+                    if (!paths.empty())
+                        pathBox.caption(paths.front().string());
+                }
+                else
+                {
+                    nana::folderbox picker;
+
+                    auto paths = picker.show();
+                    if (!paths.empty())
+                        pathBox.caption(paths.front().string());
+                }
             }
             else if (type == "file")
             {
-                nana::filebox picker{nullptr, true};
-                picker.allow_multi_select(false);
+                try
+                {
+                    nana::filebox picker{nullptr, false};
+                    picker.allow_multi_select(false);
 
-                auto paths = picker.show();
-                if (!paths.empty())
-                    pathBox.caption(paths.front().string());
+                    if (!initPath.empty())
+                        picker.init_path(initPath);
+
+                    picker.add_filter(wizard.getFilters());
+
+                    auto paths = picker.show();
+                    if (!paths.empty())
+                        pathBox.caption(paths.front().string());
+                }
+                catch(std::exception const& exc)
+                {
+                    nana::msgbox mb(inputForm, "Error", nana::msgbox::ok);
+                    mb << "Error in wizard script. Closing Wizard Dialog";
+                    mb.show();
+                    okayed = false;
+                    inputForm.close();
+                    return;
+                }
             }
             //pathBox.caption()
         });
 
-        ok.events().click([&okayed, &inputForm, &pathBox, &root, &state](auto const& btn)
+        ok.events().click([&okayed, &inputForm, &pathBox, &initPath, &root, &state, &basePath](auto const& btn)
         {
             // Check if set path is ok
             if (pathBox.caption().empty())
             {
                 nana::msgbox mb(inputForm, "Error", nana::msgbox::ok);
                 mb << "The path to create the project/file at may not be empty";
+                mb.show();
+                return;
+            }
+
+            // Check if there is an absolute path when the basePath is empty
+            if (basePath.empty() && !path{pathBox.caption()}.is_absolute())
+            {
+                nana::msgbox mb(inputForm, "Error", nana::msgbox::ok);
+                mb << "The path must be an absolute path, unless you got here from the project tree popup menu.";
                 mb.show();
                 return;
             }
@@ -250,7 +294,10 @@ namespace MinIDE
                 }
             }
 
-            root = path{pathBox.caption()};
+            if (!basePath.empty() && path{pathBox.caption()}.is_absolute())
+                root = path{basePath} / pathBox.caption();
+            else
+                root = path{pathBox.caption()};
 
             bool canceled;
             if (filesystem::is_directory(root) && !filesystem::is_empty(root))
@@ -295,12 +342,12 @@ namespace MinIDE
 
         auto creas = wizard.runWizard(state.parameters);
 
-        // Validate all paths
-        for (auto const& c : creas)
-            (void)jail(root, c.name);
-
         if (type == "directory")
         {
+            // Validate all paths
+            for (auto const& c : creas)
+                (void)jail(root, c.name);
+
             for (auto const& c : creas)
             {
                 auto path = root / jail(root, c.name);
@@ -322,6 +369,22 @@ namespace MinIDE
                     writer.write(c.content.c_str(), c.content.length());
                 }
             }
+        }
+        else if (type == "file")
+        {
+            auto c = creas.front();
+
+            auto path = root;
+            if (filesystem::exists(path))
+            {
+                nana::msgbox mb(inputForm, "Warning", nana::msgbox::yes_no);
+                mb.icon(mb.icon_question);
+                mb << "The file " << path.string() << " already exists! Overwrite?";
+                if(mb.show() != nana::msgbox::pick_yes)
+                    return {root};
+            }
+            std::ofstream writer{path, std::ios_base::binary};
+            writer.write(c.content.c_str(), c.content.length());
         }
 
         return {root};

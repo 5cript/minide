@@ -53,6 +53,41 @@ namespace MinIDE::Scripting::Api
         return result;
     }
 //---------------------------------------------------------------------------------------------------------------------
+    std::vector <std::pair <std::string, std::string>> Wizard::getFilters()
+    {
+        sol::state lua;
+        commonStateSetup(lua);
+        lua.open_libraries(sol::lib::table, sol::lib::math);
+
+        lua["debugging"] = false;
+
+        lua.script(script());
+        sol::protected_function getType = lua["getType"];
+        if (!getType.valid())
+            return {};
+
+        std::string type = getType();
+        if (type != "file")
+            return {};
+
+        std::vector <std::pair <std::string, std::string>> result;
+        sol::protected_function getFilters = lua["getFilters"];
+        if (!getFilters.valid())
+            return {};
+
+        sol::table filters = getFilters();
+        for (auto const& [index, value] : filters)
+        {
+            sol::table filter = value;
+
+            result.push_back(std::make_pair(
+                filter["name"].get <std::string>(),
+                filter["filter"].get <std::string>()
+            ));
+        }
+        return result;
+    }
+//---------------------------------------------------------------------------------------------------------------------
     std::vector <Wizard::Creation> Wizard::runWizard(Parameters const& params)
     {
         sol::state lua;
@@ -74,30 +109,43 @@ namespace MinIDE::Scripting::Api
         }
 
         lua.script(script());
-        sol::table creatables = lua["runWizard"](parameterTable);
+        std::string type = lua["getType"]();
 
-        std::vector <std::pair <int, Creation>> creas;
-        for (auto const& [index, value] : creatables)
+        if (type == "directory")
         {
-            sol::table crea = value;
+            std::vector <std::pair <int, Creation>> creas;
+            sol::table creatables = lua["runWizard"](parameterTable);
+            for (auto const& [index, value] : creatables)
+            {
+                sol::table crea = value;
 
-            Creation c {
-                crea["name"].get <std::string>(),
-                crea["content"].get <std::string>(),
-                crea["type"].get <std::string>()
-            };
+                Creation c {
+                    crea["name"].get <std::string>(),
+                    crea["content"].get <std::string>(),
+                    crea["type"].get <std::string>()
+                };
 
-            creas.push_back({index.as <int>(), c});
+                creas.push_back({index.as <int>(), c});
+            }
+            std::sort(std::begin(creas), std::end(creas), [](auto const& lhs, auto const& rhs) {
+                return lhs.first < rhs.first;
+            });
+
+            std::vector <Creation> unzipped;
+            for (auto const& c : creas) // now sorted
+                unzipped.push_back(c.second);
+
+            return unzipped;
         }
-        std::sort(std::begin(creas), std::end(creas), [](auto const& lhs, auto const& rhs) {
-            return lhs.first < rhs.first;
-        });
-
-        std::vector <Creation> unzipped;
-        for (auto const& c : creas) // now sorted
-            unzipped.push_back(c.second);
-
-        return unzipped;
+        else if (type == "file")
+        {
+            std::string content = lua["runWizard"](parameterTable);
+            Creation file;
+            file.content = content;
+            return {file};
+        }
+        else
+            throw std::runtime_error("Unexpected wizard type.");
     }
 //#####################################################################################################################
 }

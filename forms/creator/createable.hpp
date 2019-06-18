@@ -9,6 +9,7 @@
 #   include <SimpleJSON/stringify/jss_fusion_adapted_struct.hpp>
 #endif
 
+#include <unordered_map>
 #include <string>
 #include <optional>
 
@@ -23,10 +24,10 @@ namespace MinIDE
         std::optional <std::string> image;
     };
 
-    struct SerializableCreatables : public JSON::Stringifiable <SerializableCreatables>
-                                  , public JSON::Parsable <SerializableCreatables>
+    struct SerializableCategories : public JSON::Stringifiable <SerializableCategories>
+                                  , public JSON::Parsable <SerializableCategories>
     {
-        std::vector <SerializableCreatable> creatables;
+        std::unordered_map <std::string, std::vector <SerializableCreatable>> categories;
     };
 
     class Creatable
@@ -58,8 +59,11 @@ namespace MinIDE
 
         /**
          *  Returns the path the project was created in on success.
+         *
+         *  @param initPath The path that the filebox takes as a base origin
+         *  @param basePath Allows the user to only enter a file name in the wizard, instead of a full path.
          **/
-        std::optional <path> startWizard();
+        std::optional <path> startWizard(std::string const& initPath, std::string const& basePath = {});
 
     private:
         std::string name_;
@@ -77,6 +81,6 @@ BOOST_FUSION_ADAPT_STRUCT
 
 BOOST_FUSION_ADAPT_STRUCT
 (
-    MinIDE::SerializableCreatables,
-    creatables
+    MinIDE::SerializableCategories,
+    categories
 )

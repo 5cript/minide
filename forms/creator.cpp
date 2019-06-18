@@ -17,9 +17,10 @@ namespace MinIDE
 //#####################################################################################################################
     struct CreatorImpl
     {
-        CreatorImpl(nana::window owner, std::vector <Creatable>&& creatables);
+        CreatorImpl(nana::window owner, std::unordered_map <std::string, std::vector <Creatable>>&& creatables);
 
-        std::vector <Creatable> creatables;
+        std::unordered_map <std::string, std::vector <Creatable>> creatables;
+        std::unordered_map <int, std::string> categoryMapping;
 
         // Form
         nana::form form;
@@ -37,7 +38,7 @@ namespace MinIDE
         std::optional <Creatable> selected;
     };
 //---------------------------------------------------------------------------------------------------------------------
-    CreatorImpl::CreatorImpl(nana::window owner, std::vector <Creatable>&& creatables)
+    CreatorImpl::CreatorImpl(nana::window owner, std::unordered_map <std::string, std::vector <Creatable>>&& creatables)
         : creatables{std::move(creatables)}
         , form{owner, nana::API::make_center(owner, 600, 400)}
         , selector{form}
@@ -49,19 +50,26 @@ namespace MinIDE
     {
         form.caption("Creator");
 
-        selector.append_header("Type");
-        selector.at(0).inline_factory(0, nana::pat::make_factory<CreatableListElement>());
+        selector.auto_draw(false);
+        selector.append_header("Name", 320);
 
-        for (auto const& c : this->creatables)
+        int i = 0;
+        for (auto const& [category, creas] : this->creatables)
         {
-            selector.at(0).append(c.catenated());
+            auto cat = selector.append(category);
+            cat.inline_factory(0, nana::pat::make_factory<CreatableListElement>());
+            categoryMapping[i] = category;
+            ++i;
+            for (auto const& c : creas)
+                cat.append(c.catenated());
         }
 
         description.line_wrapped(true);
         description.editable(false);
+        selector.auto_draw(true);
     }
 //#####################################################################################################################
-    Creator::Creator(nana::window owner, std::vector <Creatable> creatables)
+    Creator::Creator(nana::window owner, std::unordered_map <std::string, std::vector <Creatable>> creatables)
         : impl_{new CreatorImpl(owner, std::move(creatables))}
     {
         setupLayout();
@@ -70,16 +78,19 @@ namespace MinIDE
 //---------------------------------------------------------------------------------------------------------------------
     Creator::Creator(nana::window owner, std::string const& creatableList)
         : Creator(owner, [&creatableList](){
-            auto creas = JSON::make_from_json <SerializableCreatables>(creatableList);
-            std::vector <Creatable> creatables;
-            for (auto& elem : creas.creatables)
+            auto creas = JSON::make_from_json <SerializableCategories>(creatableList);
+            std::unordered_map <std::string, std::vector <Creatable>> creatableCats;
+            for (auto& [category, creatables] : creas.categories)
             {
-                elem.script = loadResource(elem.script);
-                if (elem.image)
-                    elem.image = resource(elem.image.value()).string();
-                creatables.push_back(elem);
+                for (auto& elem : creatables)
+                {
+                    elem.script = loadResource(elem.script);
+                    if (elem.image)
+                        elem.image = resource(elem.image.value()).string();
+                    creatableCats[category].push_back(elem);
+                }
             }
-            return creatables;
+            return creatableCats;
         }())
     {
 
@@ -109,7 +120,23 @@ namespace MinIDE
 //---------------------------------------------------------------------------------------------------------------------
     void Creator::setupEvents()
     {
-        impl_->ok.events().click([this](auto const&) {
+        auto onSelect = [this](auto indexPair)
+        {
+            if (indexPair.cat != decltype(indexPair)::npos && indexPair.item != decltype(indexPair)::npos)
+            {
+                auto cat = impl_->categoryMapping[indexPair.cat-1];
+                auto iter = impl_->creatables.find(cat);
+                if (iter == std::end(impl_->creatables))
+                    impl_->selected = std::nullopt;
+                else
+                    impl_->selected = iter->second[indexPair.item];
+            }
+            else
+                impl_->selected = std::nullopt;
+
+        };
+
+        impl_->ok.events().click([this, onSelect](auto const&) {
             if (impl_->selector.selected().empty())
             {
                 impl_->selected = std::nullopt;
@@ -117,10 +144,7 @@ namespace MinIDE
                 return;
             }
             auto indexPair = impl_->selector.selected().front();
-            if (indexPair.item != decltype(indexPair)::npos)
-                impl_->selected = impl_->creatables[indexPair.item];
-            else
-                impl_->selected = std::nullopt;
+            onSelect(indexPair);
             impl_->form.close();
         });
 
@@ -129,9 +153,11 @@ namespace MinIDE
             impl_->form.close();
         });
 
-        impl_->selector.events().selected([this](auto const& item){
+        impl_->selector.events().selected([this, onSelect](auto const& item){
             auto indexPair = item.item.pos();
-            impl_->description.caption(impl_->creatables[indexPair.item].description());
+            onSelect(indexPair);
+            if (impl_->selected)
+                impl_->description.caption(impl_->selected.value().description());
         });
     }
 //#####################################################################################################################

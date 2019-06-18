@@ -197,28 +197,72 @@ namespace MinIDE
         });
         menu.at(File).append("New Project", [this](auto& item)
         {
-            Creator creator(elements_->form, loadResource("wizards/projects.json"));
-
-            auto selected = creator.show();
-            if (!selected)
-                return;
-            else
+            try
             {
-                try
+                Creator creator(elements_->form, loadResource("wizards/projects.json"));
+
+                auto selected = creator.show();
+                if (!selected)
+                    return;
+                else
                 {
-                    std::cout << selected.value().name();
-                    auto path = selected.value().startWizard();
-                    if (path)
-                        openProject(path.value());
+                    try
+                    {
+                        std::cout << selected.value().name();
+                        auto path = selected.value().startWizard("");
+                        if (path)
+                            openProject(path.value());
+                    }
+                    catch (jailbreak_error const& exc)
+                    {
+                        showError(exc.what());
+                    }
+                    catch (std::exception const& exc)
+                    {
+                        showError(exc.what());
+                    }
                 }
-                catch (jailbreak_error const& exc)
+            }
+            catch (std::exception const& exc)
+            {
+                showError("Json Error!\nIn File: "s + "resources/wizards/projects.json"s + "\n" + exc.what());
+                return;
+            }
+        });
+        menu.at(File).append("New File", [this](auto& item)
+        {
+            try
+            {
+                Creator creator(elements_->form, loadResource("wizards/files.json"));
+
+                auto selected = creator.show();
+                if (!selected)
+                    return;
+                else
                 {
-                    showError(exc.what());
+                    try
+                    {
+                        std::cout << selected.value().name();
+                        auto const* activeProject = elements_->workspace.activeProject();
+                        if (activeProject)
+                            selected.value().startWizard(activeProject->rootDir().string(), "");
+                        else
+                            selected.value().startWizard({});
+                    }
+                    catch (jailbreak_error const& exc)
+                    {
+                        showError(exc.what());
+                    }
+                    catch (std::exception const& exc)
+                    {
+                        showError(exc.what());
+                    }
                 }
-                catch (std::exception const& exc)
-                {
-                    showError(exc.what());
-                }
+            }
+            catch (std::exception const& exc)
+            {
+                showError("Json Error!\nIn File: "s + "resources/wizards/files.json"s + "\n" + exc.what());
+                return;
             }
         });
 

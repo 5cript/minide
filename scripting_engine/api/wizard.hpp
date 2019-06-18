@@ -48,6 +48,11 @@ namespace MinIDE::Scripting::Api
          *  Runs the wizard with the parameters and
          */
         std::vector <Creation> runWizard(Parameters const& params);
+
+        /**
+         *  Only valid for file generators.
+         */
+        std::vector <std::pair <std::string, std::string>> getFilters();
     private:
     };
 }
