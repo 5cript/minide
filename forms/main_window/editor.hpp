@@ -34,6 +34,11 @@ namespace MinIDE
         void save();
         void saveAll();
 
+        /**
+         *  Check for unsaved alterations.
+         */
+        bool dirty() const;
+
     public: // SIGNALS
         sig2::signal<void(path const&, int, nana::arg_mouse const&)> sidepanelClickEvent;
 

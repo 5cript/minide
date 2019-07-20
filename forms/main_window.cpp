@@ -90,6 +90,7 @@ namespace MinIDE
         , persistence{persistence}
         , workspace{persistence}
     {
+        form.caption("Minimal IDE");
     }
 //#####################################################################################################################
     MainWindow::MainWindow(GlobalPersistence* globalSettings)
@@ -195,6 +196,7 @@ namespace MinIDE
                 openProject(filesystem::path{file.string()}.parent_path());
             }
         });
+        menu.at(File).append_splitter();
         menu.at(File).append("New Project", [this](auto& item)
         {
             try
@@ -264,6 +266,20 @@ namespace MinIDE
                 showError("Json Error!\nIn File: "s + "resources/wizards/files.json"s + "\n" + exc.what());
                 return;
             }
+        });
+        menu.at(File).append_splitter();
+        menu.at(File).append("Exit", [this](auto& item)
+        {
+            if (elements_->editor.dirty())
+            {
+                nana::msgbox mb{elements_->form, "Nana C++ Library", nana::msgbox::yes_no};
+                mb.icon(mb.icon_question);
+                mb << "There might be unsaved data, do you want to exit?";
+                if (mb.show() == nana::msgbox::pick_yes)
+                    elements_->form.close();
+            }
+            else
+                elements_->form.close();
         });
 
         // Project

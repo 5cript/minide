@@ -209,6 +209,11 @@ namespace MinIDE
         elements_->layout.collocate();
     }
 //---------------------------------------------------------------------------------------------------------------------
+    bool Editor::dirty() const
+    {
+        return true; // just always return true for now.
+    }
+//---------------------------------------------------------------------------------------------------------------------
     void Editor::focusTextbox()
     {
         elements_->textbox.focus();
